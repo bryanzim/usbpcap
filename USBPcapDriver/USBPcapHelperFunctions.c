@@ -89,7 +89,7 @@ NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
         /*
          * You must dereference the PDO when it's no longer required.
          */
-        *pdo = deviceRelations->Objects[0];
+        *pdo = deviceRelations->Objects[0U];
         ExFreePool(deviceRelations);
     }
 
@@ -133,7 +133,9 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
         DkDbgVal("Expected STATUS_BUFFER_TOO_SMALL", status);
 
         if (!NT_SUCCESS(status))
+        {
             return status;
+        }
 
         /*
          * IoGetDeviceProperty should have failed.
@@ -144,7 +146,7 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    if (length == 0)
+    if (length == 0U)
     {
         /* Protect against allocating 0 bytes */
         DkDbgStr("Location length is zero");
@@ -220,7 +222,9 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
         DkDbgVal("Expected STATUS_BUFFER_TOO_SMALL", status);
 
         if (!NT_SUCCESS(status))
+        {
             return status;
+        }
 
         /*
          * IoGetDeviceProperty should have failed.
@@ -231,7 +235,7 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    if (length == 0)
+    if (length == 0U)
     {
         /* Protect against allocating 0 bytes */
         DkDbgStr("Location length is zero");
@@ -241,6 +245,11 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
     *plocation = (PWCHAR)USBPcapAllocateNonPaged(
                                                length,
                                                ' YEK');
+    if (*plocation == NULL)
+    {
+        DkDbgStr("Unable to allocate driver key name");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     status = IoGetDeviceProperty(pdo_device,
                                  DevicePropertyDriverKeyName,
@@ -482,37 +491,40 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
     }
 }
 
+/*
+ * IOCTL_USB_GET_NODE_INFORMATION returns hub information only when
+ * NodeType is UsbHub, and composite-parent information only when
+ * NodeType is UsbMIParent. Ask for one type.
+ */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
-                                 PULONG numberOfPorts)
+static
+NTSTATUS USBPcapQueryNodeInformation(PDEVICE_OBJECT parent,
+                                     USB_HUB_NODE nodeType,
+                                     USB_NODE_INFORMATION *info)
 {
-    KEVENT                event;
-    PIRP                  irp;
-    IO_STATUS_BLOCK       ioStatus;
-    USB_NODE_INFORMATION  info;
-    NTSTATUS              status;
+    KEVENT           event;
+    PIRP             irp;
+    IO_STATUS_BLOCK  ioStatus;
+    NTSTATUS         status;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
 
-    /* FIXME: check if parent is hub or composite device */
-    info.NodeType = UsbHub;
-
-    parent = IoGetAttachedDeviceReference(parent);
+    RtlZeroMemory(info, sizeof(USB_NODE_INFORMATION));
+    info->NodeType = nodeType;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
     irp = IoBuildDeviceIoControlRequest(IOCTL_USB_GET_NODE_INFORMATION,
                                         parent,
-                                        &info, sizeof(USB_NODE_INFORMATION),
-                                        &info, sizeof(USB_NODE_INFORMATION),
+                                        info, sizeof(USB_NODE_INFORMATION),
+                                        info, sizeof(USB_NODE_INFORMATION),
                                         FALSE,
                                         &event,
                                         &ioStatus);
 
     if (irp == NULL)
     {
-        ObDereferenceObject((PVOID)parent);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -523,6 +535,35 @@ NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
         /* Wait without timeout */
         KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
         status = ioStatus.Status;
+    }
+
+    return status;
+}
+
+__drv_requiresIRQL(PASSIVE_LEVEL)
+NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
+                                 PULONG numberOfPorts)
+{
+    USB_NODE_INFORMATION  info;
+    NTSTATUS              status;
+
+    PAGED_CODE();
+    ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
+
+    parent = IoGetAttachedDeviceReference(parent);
+
+    /* Hubs reject UsbMIParent, and composite parents reject UsbHub. */
+    status = USBPcapQueryNodeInformation(parent, UsbHub, &info);
+    if (!NT_SUCCESS(status))
+    {
+        NTSTATUS miStatus;
+
+        DkDbgVal("Hub node query failed, trying composite parent", status);
+        miStatus = USBPcapQueryNodeInformation(parent, UsbMIParent, &info);
+        if (NT_SUCCESS(miStatus))
+        {
+            status = miStatus;
+        }
     }
 
     ObDereferenceObject((PVOID)parent);
@@ -538,11 +579,15 @@ NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
         *numberOfPorts =
             info.u.HubInformation.HubDescriptor.bNumberOfPorts;
     }
-    else
+    else if (info.NodeType == UsbMIParent)
     {
-        /* Composite device */
         *numberOfPorts =
             info.u.MiParentInformation.NumberOfInterfaces;
+    }
+    else
+    {
+        DkDbgVal("Unexpected USB node type", info.NodeType);
+        return STATUS_INVALID_PARAMETER;
     }
 
     return status;
@@ -771,20 +816,20 @@ static NTSTATUS QueryCompareHwid(PWSTR ValueName, ULONG ValueType,
 __drv_requiresIRQL(PASSIVE_LEVEL)
 static BOOLEAN IsHwidNonStandardRootHub(PWSTR hwid)
 {
-    RTL_QUERY_REGISTRY_TABLE table[2];
+    RTL_QUERY_REGISTRY_TABLE table[2U];
     NTSTATUS status;
     BOOLEAN match = FALSE;
 
-    table[0].QueryRoutine = QueryCompareHwid;
-    table[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
-    table[0].Name = L"NonStandardHWIDs";
-    table[0].EntryContext = (PVOID)hwid;
-    table[0].DefaultType = REG_NONE;
-    table[0].DefaultData = NULL;
-    table[0].DefaultLength = 0;
+    table[0U].QueryRoutine = QueryCompareHwid;
+    table[0U].Flags = RTL_QUERY_REGISTRY_REQUIRED;
+    table[0U].Name = L"NonStandardHWIDs";
+    table[0U].EntryContext = (PVOID)hwid;
+    table[0U].DefaultType = REG_NONE;
+    table[0U].DefaultData = NULL;
+    table[0U].DefaultLength = 0;
 
     /* NULL-terminate the table */
-    memset(&table[1], 0, sizeof(RTL_QUERY_REGISTRY_TABLE));
+    memset(&table[1U], 0, sizeof(RTL_QUERY_REGISTRY_TABLE));
 
     status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
                                     L"USBPcap",

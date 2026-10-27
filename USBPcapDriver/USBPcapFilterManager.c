@@ -415,8 +415,28 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
     OBJECT_ATTRIBUTES   oa;
     UNICODE_STRING      usHubPath, usTgtDev;
     ULONG               ulRet;
+    ULONG               inputLength;
+    ULONG               outputLength;
+    PWCH                input;
 
-    RtlInitUnicodeString(&usHubPath, (PCWSTR) pIrp->AssociatedIrp.SystemBuffer);
+    inputLength = pStack->Parameters.DeviceIoControl.InputBufferLength;
+    outputLength = pStack->Parameters.DeviceIoControl.OutputBufferLength;
+    if (pIrp->AssociatedIrp.SystemBuffer == NULL ||
+        inputLength < sizeof(WCHAR) ||
+        inputLength > UNICODE_STRING_MAX_BYTES ||
+        (inputLength % sizeof(WCHAR)) != 0)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    input = (PWCH)pIrp->AssociatedIrp.SystemBuffer;
+    usHubPath.Buffer = input;
+    usHubPath.MaximumLength = (USHORT)inputLength;
+    usHubPath.Length = (USHORT)inputLength;
+    if (input[(inputLength / sizeof(WCHAR)) - 1] == L'\0')
+    {
+        usHubPath.Length -= sizeof(WCHAR);
+    }
 
     InitializeObjectAttributes(&oa, &usHubPath, OBJ_KERNEL_HANDLE, NULL, NULL);
 
@@ -430,26 +450,43 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
     usTgtDev.Length = 0;
     usTgtDev.MaximumLength = 512;
     usTgtDev.Buffer = (PWSTR) USBPcapAllocateNonPaged( 512, DKPORT_MTAG);
-    RtlFillMemory(usTgtDev.Buffer, 512, '\0');
+    if (usTgtDev.Buffer == NULL)
+    {
+        ZwClose(hObj);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlZeroMemory(usTgtDev.Buffer, 512);
 
     ntStat = ZwQuerySymbolicLinkObject(hObj, &usTgtDev, &ulRet);
     if (!NT_SUCCESS(ntStat))
     {
         DkDbgVal("Error query symbolic link!", ntStat);
         pIrp->IoStatus.Status = ntStat;
+        pIrp->IoStatus.Information = 0;
 
         *pUlRes = 0;
 
     }
     else
     {
-        RtlFillMemory(pIrp->AssociatedIrp.SystemBuffer, pStack->Parameters.DeviceIoControl.InputBufferLength, '\0');
-        RtlCopyMemory(pIrp->AssociatedIrp.SystemBuffer, usTgtDev.Buffer, 512);
+        ULONG copyLength = usTgtDev.Length + sizeof(WCHAR);
 
-        pIrp->IoStatus.Information = usTgtDev.Length;
+        if (outputLength < copyLength)
+        {
+            ntStat = STATUS_BUFFER_TOO_SMALL;
+            pIrp->IoStatus.Information = 0;
+            *pUlRes = copyLength;
+        }
+        else
+        {
+            RtlZeroMemory(pIrp->AssociatedIrp.SystemBuffer, copyLength);
+            RtlCopyMemory(pIrp->AssociatedIrp.SystemBuffer,
+                          usTgtDev.Buffer,
+                          usTgtDev.Length);
+            pIrp->IoStatus.Information = usTgtDev.Length;
+            *pUlRes = (ULONG) usTgtDev.Length;
+        }
         pIrp->IoStatus.Status = ntStat;
-
-        *pUlRes = (ULONG) usTgtDev.Length;
     }
 
     ExFreePoolWithTag(usTgtDev.Buffer, DKPORT_MTAG);

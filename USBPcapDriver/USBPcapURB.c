@@ -50,10 +50,10 @@ static PVOID USBPcapURBGetBufferPointer(ULONG length,
                                         PVOID buffer,
                                         PMDL  bufferMDL)
 {
-    ASSERT((length == 0) ||
-           ((length != 0) && (buffer != NULL || bufferMDL != NULL)));
+    ASSERT((length == 0U) ||
+           ((length != 0U) && (buffer != NULL || bufferMDL != NULL)));
 
-    if (length == 0)
+    if (length == 0U)
     {
         return NULL;
     }
@@ -247,23 +247,23 @@ USBPcapAnalyzeControlTransfer(struct _URB_CONTROL_TRANSFER* transfer,
     /* Add Setup stage to log only when on its way from FDO to PDO. */
     if (post == FALSE)
     {
-        USBPCAP_PAYLOAD_ENTRY  payload[3];
+        USBPCAP_PAYLOAD_ENTRY  payload[3U];
 
         packetHeader.header.dataLength = 8;
         packetHeader.stage = USBPCAP_CONTROL_STAGE_SETUP;
 
-        payload[0].size   = 8;
-        payload[0].buffer = (PVOID)&transfer->SetupPacket[0];
-        payload[1].size   = 0;
-        payload[1].buffer = NULL;
-        payload[2].size   = 0;
-        payload[2].buffer = NULL;
+        payload[0U].size   = 8;
+        payload[0U].buffer = (PVOID)&transfer->SetupPacket[0U];
+        payload[1U].size   = 0;
+        payload[1U].buffer = NULL;
+        payload[2U].size   = 0;
+        payload[2U].buffer = NULL;
 
         if (!transferFromDevice)
         {
             packetHeader.header.dataLength += dataBufferLength;
-            payload[1].size = dataBufferLength;
-            payload[1].buffer = dataBuffer;
+            payload[1U].size = dataBufferLength;
+            payload[1U].buffer = dataBuffer;
         }
 
         USBPcapBufferWritePayload(pDeviceData->pRootData,
@@ -274,21 +274,21 @@ USBPcapAnalyzeControlTransfer(struct _URB_CONTROL_TRANSFER* transfer,
     /* Add Complete stage to log when on its way from PDO to FDO */
     if (post == TRUE)
     {
-        USBPCAP_PAYLOAD_ENTRY  payload[2];
+        USBPCAP_PAYLOAD_ENTRY  payload[2U];
 
         packetHeader.header.dataLength = 0;
         packetHeader.stage = USBPCAP_CONTROL_STAGE_COMPLETE;
 
-        payload[0].size   = 0;
-        payload[0].buffer = NULL;
-        payload[1].size   = 0;
-        payload[1].buffer = NULL;
+        payload[0U].size   = 0;
+        payload[0U].buffer = NULL;
+        payload[1U].size   = 0;
+        payload[1U].buffer = NULL;
 
         if (transferFromDevice)
         {
             packetHeader.header.dataLength += dataBufferLength;
-            payload[0].size = dataBufferLength;
-            payload[0].buffer = dataBuffer;
+            payload[0U].size = dataBufferLength;
+            payload[0U].buffer = dataBuffer;
         }
 
         USBPcapBufferWritePayload(pDeviceData->pRootData,
@@ -367,22 +367,63 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                 ExFreePool((PVOID)pDeviceData->descriptor);
             }
 
+            pDeviceData->descriptor = NULL;
             if (pSelectConfiguration->ConfigurationDescriptor != NULL)
             {
-                SIZE_T descSize = pSelectConfiguration->ConfigurationDescriptor->wTotalLength;
+                PUSB_CONFIGURATION_DESCRIPTOR source;
+                PUSB_CONFIGURATION_DESCRIPTOR copy = NULL;
+                SIZE_T descSize = 0;
 
-                pDeviceData->descriptor =
-                    USBPcapAllocateNonPaged(
-                                          descSize,
-                                          (ULONG)'CSED');
+                source = pSelectConfiguration->ConfigurationDescriptor;
 
-                RtlCopyMemory(pDeviceData->descriptor,
-                              pSelectConfiguration->ConfigurationDescriptor,
-                              (SIZE_T)descSize);
-            }
-            else
-            {
-                pDeviceData->descriptor = NULL;
+                /* bLength and wTotalLength are device-supplied. The URB
+                 * does not carry the allocation size, so a bad header or
+                 * a faulting copy is dropped.
+                 */
+                __try
+                {
+                    if (source->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR) &&
+                        source->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE &&
+                        source->wTotalLength >= source->bLength)
+                    {
+                        descSize = source->wTotalLength;
+                    }
+                }
+                __except (EXCEPTION_EXECUTE_HANDLER)
+                {
+                    descSize = 0;
+                    DkDbgStr("Configuration descriptor header faulted");
+                }
+
+                if (descSize != 0)
+                {
+                    copy = USBPcapAllocateNonPaged(descSize, (ULONG)'CSED');
+                }
+
+                if (copy != NULL)
+                {
+                    __try
+                    {
+                        RtlCopyMemory(copy, source, descSize);
+                        if (copy->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR) &&
+                            copy->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE &&
+                            copy->wTotalLength >= copy->bLength &&
+                            copy->wTotalLength <= descSize)
+                        {
+                            pDeviceData->descriptor = copy;
+                            copy = NULL;
+                        }
+                    }
+                    __except (EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        DkDbgStr("Configuration descriptor copy faulted");
+                    }
+
+                    if (copy != NULL)
+                    {
+                        ExFreePool((PVOID)copy);
+                    }
+                }
             }
 
             break;
@@ -476,21 +517,21 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             wrapTransfer.TransferBufferLength = 0;
             wrapTransfer.TransferBuffer = NULL;
             wrapTransfer.TransferBufferMDL = NULL;
-            wrapTransfer.SetupPacket[0] = 0x00; /* Host to Device, Standard */
-            wrapTransfer.SetupPacket[1] = 0x09; /* SET_CONFIGURATION */
+            wrapTransfer.SetupPacket[0U] = 0x00; /* Host to Device, Standard */
+            wrapTransfer.SetupPacket[1U] = 0x09; /* SET_CONFIGURATION */
             if (pSelectConfiguration->ConfigurationDescriptor == NULL)
             {
-                wrapTransfer.SetupPacket[2] = 0;
+                wrapTransfer.SetupPacket[2U] = 0;
             }
             else
             {
-                wrapTransfer.SetupPacket[2] = pSelectConfiguration->ConfigurationDescriptor->bConfigurationValue;
+                wrapTransfer.SetupPacket[2U] = pSelectConfiguration->ConfigurationDescriptor->bConfigurationValue;
             }
-            wrapTransfer.SetupPacket[3] = 0;
-            wrapTransfer.SetupPacket[4] = 0;
-            wrapTransfer.SetupPacket[5] = 0;
-            wrapTransfer.SetupPacket[6] = 0;
-            wrapTransfer.SetupPacket[7] = 0;
+            wrapTransfer.SetupPacket[3U] = 0;
+            wrapTransfer.SetupPacket[4U] = 0;
+            wrapTransfer.SetupPacket[5U] = 0;
+            wrapTransfer.SetupPacket[6U] = 0;
+            wrapTransfer.SetupPacket[7U] = 0;
 
             USBPcapAnalyzeControlTransfer(&wrapTransfer, header,
                                           pDeviceData, pIrp, post);
@@ -537,15 +578,15 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             wrapTransfer.TransferBufferLength = 0;
             wrapTransfer.TransferBuffer = NULL;
             wrapTransfer.TransferBufferMDL = NULL;
-            wrapTransfer.SetupPacket[0] = 0x00; /* Host to Device, Standard */
-            wrapTransfer.SetupPacket[1] = 0x0B; /* SET_INTERFACE */
+            wrapTransfer.SetupPacket[0U] = 0x00; /* Host to Device, Standard */
+            wrapTransfer.SetupPacket[1U] = 0x0B; /* SET_INTERFACE */
 
-            wrapTransfer.SetupPacket[2] = intDescriptor->bAlternateSetting;
-            wrapTransfer.SetupPacket[3] = 0;
-            wrapTransfer.SetupPacket[4] = intDescriptor->bInterfaceNumber;
-            wrapTransfer.SetupPacket[5] = 0;
-            wrapTransfer.SetupPacket[6] = 0;
-            wrapTransfer.SetupPacket[7] = 0;
+            wrapTransfer.SetupPacket[2U] = intDescriptor->bAlternateSetting;
+            wrapTransfer.SetupPacket[3U] = 0;
+            wrapTransfer.SetupPacket[4U] = intDescriptor->bInterfaceNumber;
+            wrapTransfer.SetupPacket[5U] = 0;
+            wrapTransfer.SetupPacket[6U] = 0;
+            wrapTransfer.SetupPacket[7U] = 0;
 
             USBPcapAnalyzeControlTransfer(&wrapTransfer, header,
                                           pDeviceData, pIrp, post);
@@ -563,7 +604,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                                           pDeviceData, pIrp, post);
 
             DkDbgVal("", transfer->PipeHandle);
-            USBPcapPrintChars("Setup Packet", &transfer->SetupPacket[0], 8);
+            USBPcapPrintChars("Setup Packet", &transfer->SetupPacket[0U], 8);
             if (transfer->TransferBuffer != NULL)
             {
                 USBPcapPrintChars("Transfer Buffer",
@@ -589,15 +630,15 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             wrapTransfer.TransferBufferLength = transfer->TransferBufferLength;
             wrapTransfer.TransferBuffer = transfer->TransferBuffer;
             wrapTransfer.TransferBufferMDL = transfer->TransferBufferMDL;
-            RtlCopyMemory(&wrapTransfer.SetupPacket[0],
-                          &transfer->SetupPacket[0],
+            RtlCopyMemory(&wrapTransfer.SetupPacket[0U],
+                          &transfer->SetupPacket[0U],
                           8 /* Setup packet is always 8 bytes */);
 
             USBPcapAnalyzeControlTransfer(&wrapTransfer, header,
                                           pDeviceData, pIrp, post);
 
             DkDbgVal("", transfer->PipeHandle);
-            USBPcapPrintChars("Setup Packet", &transfer->SetupPacket[0], 8);
+            USBPcapPrintChars("Setup Packet", &transfer->SetupPacket[0U], 8);
             if (transfer->TransferBuffer != NULL)
             {
                 USBPcapPrintChars("Transfer Buffer",
@@ -631,9 +672,9 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Device (0)
                  */
-                wrapTransfer.SetupPacket[0] = 0x80;
+                wrapTransfer.SetupPacket[0U] = 0x80;
                 /* 0x06 - GET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x06;
+                wrapTransfer.SetupPacket[1U] = 0x06;
             }
             else if (header->Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT)
             {
@@ -642,9 +683,9 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Endpoint (2)
                  */
-                wrapTransfer.SetupPacket[0] = 0x82;
+                wrapTransfer.SetupPacket[0U] = 0x82;
                 /* 0x06 - GET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x06;
+                wrapTransfer.SetupPacket[1U] = 0x06;
             }
             else if (header->Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE)
             {
@@ -653,9 +694,9 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Interface (1)
                  */
-                wrapTransfer.SetupPacket[0] = 0x81;
+                wrapTransfer.SetupPacket[0U] = 0x81;
                 /* 0x06 - GET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x06;
+                wrapTransfer.SetupPacket[1U] = 0x06;
             }
             else if (header->Function == URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE)
             {
@@ -664,9 +705,9 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Device (0)
                  */
-                wrapTransfer.SetupPacket[0] = 0x00;
+                wrapTransfer.SetupPacket[0U] = 0x00;
                 /* 0x07 - SET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x07;
+                wrapTransfer.SetupPacket[1U] = 0x07;
             }
             else if (header->Function == URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT)
             {
@@ -675,9 +716,9 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Endpoint (2)
                  */
-                wrapTransfer.SetupPacket[0] = 0x02;
+                wrapTransfer.SetupPacket[0U] = 0x02;
                 /* 0x07 - SET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x07;
+                wrapTransfer.SetupPacket[1U] = 0x07;
             }
             else if (header->Function == URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE)
             {
@@ -686,21 +727,21 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Interface (1)
                  */
-                wrapTransfer.SetupPacket[0] = 0x01;
+                wrapTransfer.SetupPacket[0U] = 0x01;
                 /* 0x07 - SET_DESCRIPTOR */
-                wrapTransfer.SetupPacket[1] = 0x07;
+                wrapTransfer.SetupPacket[1U] = 0x07;
             }
             else
             {
                 DkDbgVal("Invalid function", header->Function);
                 break;
             }
-            wrapTransfer.SetupPacket[2] = request->Index;
-            wrapTransfer.SetupPacket[3] = request->DescriptorType;
-            wrapTransfer.SetupPacket[4] = (request->LanguageId & 0x00FF);
-            wrapTransfer.SetupPacket[5] = (request->LanguageId & 0xFF00) >> 8;
-            wrapTransfer.SetupPacket[6] = (request->TransferBufferLength & 0x00FF);
-            wrapTransfer.SetupPacket[7] = (request->TransferBufferLength & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[2U] = request->Index;
+            wrapTransfer.SetupPacket[3U] = request->DescriptorType;
+            wrapTransfer.SetupPacket[4U] = (request->LanguageId & 0x00FF);
+            wrapTransfer.SetupPacket[5U] = (request->LanguageId & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[6U] = (request->TransferBufferLength & 0x00FF);
+            wrapTransfer.SetupPacket[7U] = (request->TransferBufferLength & 0xFF00) >> 8;
 
             wrapTransfer.TransferBufferLength = request->TransferBufferLength;
             wrapTransfer.TransferBuffer = request->TransferBuffer;
@@ -733,7 +774,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Device (0)
                  */
-                wrapTransfer.SetupPacket[0] = 0x80;
+                wrapTransfer.SetupPacket[0U] = 0x80;
             }
             else if (header->Function == URB_FUNCTION_GET_STATUS_FROM_INTERFACE)
             {
@@ -741,7 +782,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Interface (1)
                  */
-                wrapTransfer.SetupPacket[0] = 0x81;
+                wrapTransfer.SetupPacket[0U] = 0x81;
             }
             else if (header->Function == URB_FUNCTION_GET_STATUS_FROM_ENDPOINT)
             {
@@ -749,7 +790,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Endpoint (2)
                  */
-                wrapTransfer.SetupPacket[0] = 0x82;
+                wrapTransfer.SetupPacket[0U] = 0x82;
             }
             else if (header->Function == URB_FUNCTION_GET_STATUS_FROM_OTHER)
             {
@@ -757,7 +798,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * D6-D5: Standard (0)
                  * D4-D0: Other (3)
                  */
-                wrapTransfer.SetupPacket[0] = 0x83;
+                wrapTransfer.SetupPacket[0U] = 0x83;
             }
             else
             {
@@ -766,16 +807,16 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             }
 
             /* 0x00 - GET_STATUS */
-            wrapTransfer.SetupPacket[1] = 0x00;
+            wrapTransfer.SetupPacket[1U] = 0x00;
             /* wValue is Zero */
-            wrapTransfer.SetupPacket[2] = 0;
-            wrapTransfer.SetupPacket[3] = 0;
+            wrapTransfer.SetupPacket[2U] = 0;
+            wrapTransfer.SetupPacket[3U] = 0;
             /* wIndex */
-            wrapTransfer.SetupPacket[4] = (request->Index & 0x00FF);
-            wrapTransfer.SetupPacket[5] = (request->Index & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[4U] = (request->Index & 0x00FF);
+            wrapTransfer.SetupPacket[5U] = (request->Index & 0xFF00) >> 8;
             /* wLength must be 2 */
-            wrapTransfer.SetupPacket[6] = (request->TransferBufferLength & 0x00FF);
-            wrapTransfer.SetupPacket[7] = (request->TransferBufferLength & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[6U] = (request->TransferBufferLength & 0x00FF);
+            wrapTransfer.SetupPacket[7U] = (request->TransferBufferLength & 0xFF00) >> 8;
 
             wrapTransfer.TransferBufferLength = request->TransferBufferLength;
             wrapTransfer.TransferBuffer = request->TransferBuffer;
@@ -818,49 +859,49 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                     /* D4-D0: Device (0)
                      * D6-D5: Vendor (2)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x40;
+                    wrapTransfer.SetupPacket[0U] = 0x40;
                     break;
                 case URB_FUNCTION_VENDOR_INTERFACE:
                     /* D4-D0: Interface (1)
                      * D6-D5: Vendor (2)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x41;
+                    wrapTransfer.SetupPacket[0U] = 0x41;
                     break;
                 case URB_FUNCTION_VENDOR_ENDPOINT:
                     /* D4-D0: Endpoint (2)
                      * D6-D5: Vendor (2)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x42;
+                    wrapTransfer.SetupPacket[0U] = 0x42;
                     break;
                 case URB_FUNCTION_VENDOR_OTHER:
                     /* D4-D0: Other (3)
                      * D6-D5: Vendor (2)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x43;
+                    wrapTransfer.SetupPacket[0U] = 0x43;
                     break;
                 case URB_FUNCTION_CLASS_DEVICE:
                     /* D4-D0: Device (0)
                      * D6-D5: Class (1)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x20;
+                    wrapTransfer.SetupPacket[0U] = 0x20;
                     break;
                 case URB_FUNCTION_CLASS_INTERFACE:
                     /* D4-D0: Interface (1)
                      * D6-D5: Class (1)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x21;
+                    wrapTransfer.SetupPacket[0U] = 0x21;
                     break;
                 case URB_FUNCTION_CLASS_ENDPOINT:
                     /* D4-D0: Endpoint (2)
                      * D6-D5: Class (1)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x22;
+                    wrapTransfer.SetupPacket[0U] = 0x22;
                     break;
                 case URB_FUNCTION_CLASS_OTHER:
                     /* D4-D0: Other (3)
                      * D6-D5: Class (1)
                      */
-                    wrapTransfer.SetupPacket[0] = 0x23;
+                    wrapTransfer.SetupPacket[0U] = 0x23;
                     break;
                 default:
                     DkDbgVal("Invalid function", header->Function);
@@ -870,16 +911,16 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             if (request->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
                 /* Set D7: Request data from device */
-                wrapTransfer.SetupPacket[0] |= 0x80;
+                wrapTransfer.SetupPacket[0U] |= 0x80;
             }
 
-            wrapTransfer.SetupPacket[1] = request->Request;
-            wrapTransfer.SetupPacket[2] = (request->Value & 0x00FF);
-            wrapTransfer.SetupPacket[3] = (request->Value & 0xFF00) >> 8;
-            wrapTransfer.SetupPacket[4] = (request->Index & 0x00FF);
-            wrapTransfer.SetupPacket[5] = (request->Index & 0xFF00) >> 8;
-            wrapTransfer.SetupPacket[6] = (request->TransferBufferLength & 0x00FF);
-            wrapTransfer.SetupPacket[7] = (request->TransferBufferLength & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[1U] = request->Request;
+            wrapTransfer.SetupPacket[2U] = (request->Value & 0x00FF);
+            wrapTransfer.SetupPacket[3U] = (request->Value & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[4U] = (request->Index & 0x00FF);
+            wrapTransfer.SetupPacket[5U] = (request->Index & 0xFF00) >> 8;
+            wrapTransfer.SetupPacket[6U] = (request->TransferBufferLength & 0x00FF);
+            wrapTransfer.SetupPacket[7U] = (request->TransferBufferLength & 0xFF00) >> 8;
 
             USBPcapAnalyzeControlTransfer(&wrapTransfer, header,
                                           pDeviceData, pIrp, post);
@@ -993,19 +1034,34 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             DkDbgVal("", transfer->TransferFlags);
             DkDbgVal("", transfer->NumberOfPackets);
 
-            /* Handle transfers up to maximum of 1024 packets */
-            if (transfer->NumberOfPackets > 1024)
+            /* Handle transfers of 1..1024 packets. Zero underflows the
+             * header size because the header already contains one slot.
+             */
+            if (transfer->NumberOfPackets == 0 ||
+                transfer->NumberOfPackets > 1024)
             {
-                DkDbgVal("Too many packets for isochronous transfer",
+                DkDbgVal("Unsupported isochronous packet count",
                          transfer->NumberOfPackets);
                 break;
             }
 
-            /* headerLen will fit on 16 bits for every allowed value of
-             * NumberOfPackets */
-            headerLen = (USHORT)sizeof(USBPCAP_BUFFER_ISOCH_HEADER) +
-                        (USHORT)(sizeof(USBPCAP_BUFFER_ISO_PACKET) *
-                                 (transfer->NumberOfPackets - 1));
+            {
+                SIZE_T urbBytes;
+                SIZE_T captureBytes;
+
+                urbBytes = offsetof(struct _URB_ISOCH_TRANSFER, IsoPacket) +
+                           ((SIZE_T)transfer->NumberOfPackets *
+                            sizeof(USBD_ISO_PACKET_DESCRIPTOR));
+                captureBytes = sizeof(USBPCAP_BUFFER_ISOCH_HEADER) +
+                               ((SIZE_T)(transfer->NumberOfPackets - 1) *
+                                sizeof(USBPCAP_BUFFER_ISO_PACKET));
+                if (urbBytes > header->Length || captureBytes > MAXUSHORT)
+                {
+                    DkDbgStr("Isochronous URB length does not cover NumberOfPackets");
+                    break;
+                }
+                headerLen = (USHORT)captureBytes;
+            }
 
             packetHeader = USBPcapAllocateNonPaged(
                                                  (SIZE_T)headerLen,
@@ -1070,21 +1126,40 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
 
                 if (((transfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN) == USBD_TRANSFER_DIRECTION_IN) && (post == TRUE))
                 {
-                    ULONG  compactedOffset;
-                    ULONG  compactedLength;
+                    ULONG    compactedOffset;
+                    ULONG    compactedLength;
+                    BOOLEAN  packetsFit;
 
                     compactedLength = 0;
+                    packetsFit = (transferBuffer != NULL);
 
-                    /* Compute the compacted transfer length by summing up the individual packet lengths */
-                    for (i = 0; i < transfer->NumberOfPackets; i++)
+                    /* Each packet must lie inside the transfer buffer, and
+                     * the lengths must sum without wrapping.
+                     */
+                    for (i = 0; packetsFit && (i < transfer->NumberOfPackets); i++)
                     {
-                        compactedLength += transfer->IsoPacket[i].Length;
+                        ULONG packetOffset = transfer->IsoPacket[i].Offset;
+                        ULONG packetLength = transfer->IsoPacket[i].Length;
+
+                        if (packetLength > (transfer->TransferBufferLength - compactedLength))
+                        {
+                            packetsFit = FALSE;
+                        }
+                        else if ((packetLength != 0) &&
+                                 ((packetOffset > transfer->TransferBufferLength) ||
+                                  (packetLength > (transfer->TransferBufferLength - packetOffset))))
+                        {
+                            packetsFit = FALSE;
+                        }
+                        else
+                        {
+                            compactedLength += packetLength;
+                        }
                     }
 
-                    if (compactedLength > transfer->TransferBufferLength)
+                    if (!packetsFit)
                     {
-                        /* This is a safety check -- the numbers don't add up (this should never happen) */
-                        DkDbgStr("Sum of Isochronous transfer packet lengths exceeds transfer buffer length");
+                        DkDbgStr("Isochronous packet does not fit in the transfer buffer");
                         ExFreePool((PVOID)packetHeader);
                         break;
                     }

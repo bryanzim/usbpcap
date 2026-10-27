@@ -138,7 +138,7 @@ NTSTATUS DkReadWrite(PDEVICE_OBJECT pDevObj, PIRP pIrp)
     }
     else if (pDevExt->deviceMagic == USBPCAP_MAGIC_CONTROL)
     {
-        UINT32 bytesRead = 0;
+        UINT32 bytesRead = 0U;
         /* Handling Read/Write for control object */
         switch (pStack->MajorFunction)
         {
@@ -168,14 +168,24 @@ NTSTATUS DkReadWrite(PDEVICE_OBJECT pDevObj, PIRP pIrp)
                 break;
         }
 
-        /* If the IRP was pended, do not call complete request */
+        /* If the IRP was pended, do not call complete request.
+         * A pended read keeps the remove lock until it is completed.
+         */
         if (ntStat != STATUS_PENDING)
         {
             DkCompleteRequest(pIrp, ntStat, (ULONG_PTR)bytesRead);
         }
     }
 
-    IoReleaseRemoveLock(&pDevExt->removeLock, (PVOID) pIrp);
+    /* Forwarded hub and target IRPs are not completed here, so a
+     * STATUS_PENDING return from IoCallDriver still drops the lock.
+     * Only a capture read queued on the control device holds it.
+     */
+    if (ntStat != STATUS_PENDING ||
+        pDevExt->deviceMagic != USBPCAP_MAGIC_CONTROL)
+    {
+        IoReleaseRemoveLock(&pDevExt->removeLock, (PVOID) pIrp);
+    }
 
     return ntStat;
 }

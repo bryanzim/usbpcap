@@ -34,7 +34,7 @@ typedef struct _USBPCAP_ADDRESS_FILTER
      * addresses[2] - 64 - 95
      * addresses[3] - 96 - 127
      */
-    UINT32 addresses[4];
+    UINT32 addresses[4U];
 
     /* Filter all devices */
     BOOLEAN filterAll;
@@ -172,7 +172,7 @@ typedef struct
     ULONG                         startFrame;
     ULONG                         numberOfPackets;
     ULONG                         errorCount;
-    USBPCAP_BUFFER_ISO_PACKET     packet[1];
+    USBPCAP_BUFFER_ISO_PACKET     packet[1U];
 } USBPCAP_BUFFER_ISOCH_HEADER, *PUSBPCAP_BUFFER_ISOCH_HEADER;
 #pragma pack(pop)
 

@@ -93,10 +93,10 @@ HandleUSBPcapControlIOCTL(PIRP pIrp, PIO_STACK_LOCATION pStack,
                    sizeof(USBPCAP_ADDRESS_FILTER));
 
             DkDbgStr("IOCTL_USBPCAP_START_FILTERING");
-            DkDbgVal("", pAddressFilter->addresses[0]);
-            DkDbgVal("", pAddressFilter->addresses[1]);
-            DkDbgVal("", pAddressFilter->addresses[2]);
-            DkDbgVal("", pAddressFilter->addresses[3]);
+            DkDbgVal("", pAddressFilter->addresses[0U]);
+            DkDbgVal("", pAddressFilter->addresses[1U]);
+            DkDbgVal("", pAddressFilter->addresses[2U]);
+            DkDbgVal("", pAddressFilter->addresses[3U]);
             DkDbgVal("", pAddressFilter->filterAll);
             break;
         }
@@ -144,7 +144,7 @@ NTSTATUS DkDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
     NTSTATUS            ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION   pDevExt = NULL;
     PIO_STACK_LOCATION  pStack = NULL;
-    ULONG               ulRes = 0;
+    ULONG               ulRes = 0U;
 
     pDevExt = (PDEVICE_EXTENSION) pDevObj->DeviceExtension;
 
@@ -169,7 +169,7 @@ NTSTATUS DkDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
         PDEVICE_EXTENSION      rootExt;
         PUSBPCAP_ROOTHUB_DATA  pRootData;
         BOOLEAN                allowCapture = FALSE;
-        SIZE_T                 length = 0;
+        SIZE_T                 length = 0U;
         UINT_PTR               info;
 
         rootExt = (PDEVICE_EXTENSION)pDevExt->context.control.pRootHubObject->DeviceExtension;
@@ -205,7 +205,7 @@ NTSTATUS DkInDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
     PDEVICE_EXTENSION   pDevExt = NULL;
     PIO_STACK_LOCATION  pStack = NULL;
     PDEVICE_OBJECT      pNextDevObj = NULL;
-    ULONG               ctlCode = 0;
+    ULONG               ctlCode = 0U;
 
     pDevExt = (PDEVICE_EXTENSION) pDevObj->DeviceExtension;
 
@@ -261,7 +261,7 @@ NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIR
 {
     NTSTATUS            ntStat = STATUS_SUCCESS;
     PURB                pUrb = NULL;
-    ULONG               ctlCode = 0;
+    ULONG               ctlCode = 0U;
 
     ntStat = IoAcquireRemoveLock(&pDevExt->removeLock, (PVOID) pIrp);
     if (!NT_SUCCESS(ntStat))
@@ -317,7 +317,9 @@ NTSTATUS DkTgtInDevCtlCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
     PIO_STACK_LOCATION  pStack = NULL;
 
     if (pIrp->PendingReturned)
+    {
         IoMarkIrpPending(pIrp);
+    }
 
     status = pIrp->IoStatus.Status;
 

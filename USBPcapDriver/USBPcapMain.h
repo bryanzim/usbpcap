@@ -121,6 +121,7 @@ typedef struct DEVICE_EXTENSION_Tag {
         struct
         {
             USHORT          id;
+            BOOLEAN         removing;        /* TRUE once delete has started */
             PDEVICE_OBJECT  pRootHubObject;  /* Root Hub object */
 
             /* Pointer to handle that can control capture and read the data.
