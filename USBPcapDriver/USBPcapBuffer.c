@@ -257,7 +257,7 @@ NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
         return STATUS_INVALID_PARAMETER;
     }
 
-    buffer = ExAllocatePoolWithTag(NonPagedPool,
+    buffer = USBPcapAllocateNonPaged(
                                    (SIZE_T) bytes,
                                    USBPCAP_BUFFER_TAG);
 

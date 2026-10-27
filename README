@@ -7,35 +7,44 @@ Directory overview:
   USBPcapCMD - sample user space application
   USBPcapDriver - filter driver used to capture data
 
-Build instructions:
-  Download and install Windows Driver Kit 7.1.0 from Microsoft
-    http://www.microsoft.com/en-us/download/details.aspx?id=11800
+Build instructions (Windows Server 2025):
+  Install Visual Studio 2026 with the Desktop development with C++ workload,
+  the Windows Driver Kit individual component, and the Spectre-mitigated
+  libraries. Then install the matching current Windows SDK and Windows Driver
+  Kit (WDK 10.0.28000, the Windows 11 version 26H1 kit). The latest WDK builds
+  drivers for Windows Server 2025 and for older supported releases.
 
-  Adjust driver_build_win7_64bit.bat (first line of that file):
-    * To change to checked build: replace 'fre' with 'chk'
-    * To build for x86: replace 'x64' with 'x86'
-    * To build for Windows XP: replace 'WIN7' with 'WXP'
+  From this directory run:
+    build_server2025.bat
 
-  Windows 8 Build instructions:
-  In order to compile for Windows 8, you need to have Visual Studio 2013
-  Community and install Windows Driver Kit 8.1 Update.
-  To create solution file use the following command from Visual Studio 2013
-  Command Prompt (while being chdired into usbpcap sources directory):
-  > Nmake2MsBuild dirs
+  That builds USBPcap.sys and USBPcapCMD.exe for x64 and ARM64 with
+  NTDDI_WIN11_GE (Windows 11 24H2 / Windows Server 2025, build 26100) and
+  writes packages to:
+    Release\Server2025\x64
+    Release\Server2025\ARM64
 
-  This will create solution dirs.sln. You can build the driver from the
-  Visual Studio 2013 Command Prompt:
-  > MSBuild dirs.sln /p:Configuration="Win8 Debug"
+  Open USBPcap.sln in Visual Studio 2026 to build Debug or Release from the IDE.
+  The kernel project uses the WindowsKernelModeDriver10.0 toolset.
+
+  Windows Server 2025 has no x86 kernel. The driver allocates nonpaged pool
+  with ExAllocatePool2 so it can load when hypervisor-enforced code integrity
+  is turned on.
+
+  The driver_build*.bat scripts still describe the Windows 7.1 DDK and the
+  Windows 8.1 WDK. Those kits are not how this tree is built for Server 2025.
 
 Installation:
-  TESTSIGNING must be enabled in order to install this driver on 64 bit
-  Windows. To do so, issue following command (as administrator):
+  The packages produced by build_server2025.bat are not attestation signed.
+  To load one on a 64-bit machine, enable test signing and reboot:
     Bcdedit.exe -set TESTSIGNING ON
-  and reboot.
 
   Right click on the USBPcap.inf file and select Install.
 
   After installing, reboot.
+
+  A catalog built for Server2025_X64 or Server2025_ARM64 does not replace a
+  Microsoft attestation signature. Production installs need an EV-signed
+  submission to the Hardware Dev Center.
 
 Usage:
   Currently there is no capture engine dll.

@@ -151,7 +151,7 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    location = (PWCHAR)ExAllocatePoolWithTag(NonPagedPool,
+    location = (PWCHAR)USBPcapAllocateNonPaged(
                                              length,
                                              ' COL');
 
@@ -238,7 +238,7 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    *plocation = (PWCHAR)ExAllocatePoolWithTag(NonPagedPool,
+    *plocation = (PWCHAR)USBPcapAllocateNonPaged(
                                                length,
                                                ' YEK');
 
@@ -333,7 +333,7 @@ NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
                   sizeof(WCHAR) + /* Extra data to NULL-terminate */
                   sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
     *ppname = (PUSB_NODE_CONNECTION_DRIVERKEY_NAME)
-                  ExAllocatePoolWithTag(NonPagedPool, pnameLength, 'EDON');
+                  USBPcapAllocateNonPaged( pnameLength, 'EDON');
 
     if (*ppname == NULL)
     {
@@ -825,7 +825,7 @@ BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
 
-    hwid = (WCHAR*)ExAllocatePoolWithTag(NonPagedPool,
+    hwid = (WCHAR*)USBPcapAllocateNonPaged(
                                          REGSTR_VAL_MAX_HCID_LEN,
                                          'DIWH');
 

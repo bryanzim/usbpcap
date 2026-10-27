@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}</ProjectGuid>
+    <RootNamespace>USBPcap</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.28000.0</WindowsTargetPlatformVersion>
+    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>WDM</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <!-- NTDDI_WIN11_GE: Windows 11 24H2 and Windows Server 2025 (build 26100). -->
+    <_NT_TARGET_VERSION>0xA000010</_NT_TARGET_VERSION>
+    <SignMode>Off</SignMode>
+    <EnableInf2cat>false</EnableInf2cat>
+    <InfVerif_Enable>false</InfVerif_Enable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutDir>$(ProjectDir)..\Release\Server2025\$(Platform)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <OutDir>$(ProjectDir)..\bin\$(Platform)\Debug\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IntDir>$(ProjectDir)..\obj\USBPcap\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>USBPcap</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>POOL_NX_OPTIN=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>wdmsec.lib;ntstrsafe.lib;usbd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="USBPcapBuffer.c" />
+    <ClCompile Include="USBPcapDeviceControl.c" />
+    <ClCompile Include="USBPcapFilterManager.c" />
+    <ClCompile Include="USBPcapGenReq.c" />
+    <ClCompile Include="USBPcapHelperFunctions.c" />
+    <ClCompile Include="USBPcapMain.c" />
+    <ClCompile Include="USBPcapPnP.c" />
+    <ClCompile Include="USBPcapPower.c" />
+    <ClCompile Include="USBPcapQueue.c" />
+    <ClCompile Include="USBPcapRootHubControl.c" />
+    <ClCompile Include="USBPcapTables.c" />
+    <ClCompile Include="USBPcapURB.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\USBPcap.h" />
+    <ClInclude Include="USBPcapBuffer.h" />
+    <ClInclude Include="USBPcapHelperFunctions.h" />
+    <ClInclude Include="USBPcapMain.h" />
+    <ClInclude Include="USBPcapQueue.h" />
+    <ClInclude Include="USBPcapRootHubControl.h" />
+    <ClInclude Include="USBPcapTables.h" />
+    <ClInclude Include="USBPcapURB.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="USBPcap.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

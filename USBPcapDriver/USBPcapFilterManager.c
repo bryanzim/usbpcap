@@ -90,7 +90,7 @@ static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
     allocRoothubData = (pParentDevExt == NULL);
 
     /* Allocate USBPCAP_DEVICE_DATA */
-    pDeviceData = ExAllocatePoolWithTag(NonPagedPool,
+    pDeviceData = USBPcapAllocateNonPaged(
                                         sizeof(USBPCAP_DEVICE_DATA),
                                         DKPORT_MTAG);
 
@@ -128,7 +128,7 @@ static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
         {
             /* Allocate USBPCAP_ROOTHUB_DATA */
             pDeviceData->pRootData =
-                ExAllocatePoolWithTag(NonPagedPool,
+                USBPcapAllocateNonPaged(
                                       sizeof(USBPCAP_ROOTHUB_DATA),
                                       DKPORT_MTAG);
             if (pDeviceData->pRootData != NULL)
@@ -248,11 +248,9 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT pDrvObj,
     }
 
     // 3. Attach to bus driver
-    pDevExt->pNextDevObj = NULL;
-    pDevExt->pNextDevObj = IoAttachDeviceToDeviceStack(pHubFilter, pTgtDevObj);
-    if (pDevExt->pNextDevObj == NULL)
+    ntStat = IoAttachDeviceToDeviceStackSafe(pHubFilter, pTgtDevObj, &pDevExt->pNextDevObj);
+    if (!NT_SUCCESS(ntStat))
     {
-        ntStat = STATUS_NO_SUCH_DEVICE;
         DkDbgStr("Error attach device!");
         goto EndFunc;
     }
@@ -356,12 +354,10 @@ NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pParentDevExt, PDEVICE_OBJECT pT
     IoInitializeRemoveLock(&pDevExt->removeLock, 0, 0, 0);
 
     // 3. Attach to target device
-    pDevExt->pNextDevObj = NULL;
-    pDevExt->pNextDevObj = IoAttachDeviceToDeviceStack(pDevExt->pThisDevObj, pTgtDevObj);
-    if (pDevExt->pNextDevObj == NULL)
+    ntStat = IoAttachDeviceToDeviceStackSafe(pDevExt->pThisDevObj, pTgtDevObj, &pDevExt->pNextDevObj);
+    if (!NT_SUCCESS(ntStat))
     {
         DkDbgStr("Error attach target device!");
-        ntStat = STATUS_NO_SUCH_DEVICE;
         goto EndAttDev;
     }
 
@@ -433,7 +429,7 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
 
     usTgtDev.Length = 0;
     usTgtDev.MaximumLength = 512;
-    usTgtDev.Buffer = (PWSTR) ExAllocatePoolWithTag(NonPagedPool, 512, DKPORT_MTAG);
+    usTgtDev.Buffer = (PWSTR) USBPcapAllocateNonPaged( 512, DKPORT_MTAG);
     RtlFillMemory(usTgtDev.Buffer, 512, '\0');
 
     ntStat = ZwQuerySymbolicLinkObject(hObj, &usTgtDev, &ulRet);

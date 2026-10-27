@@ -292,7 +292,7 @@ NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATI
                         PDEVICE_OBJECT *children;
 
                         children =
-                            ExAllocatePoolWithTag(NonPagedPool,
+                            USBPcapAllocateNonPaged(
                                                   sizeof(PDEVICE_OBJECT) *
                                                   (pDevRel->Count + 1),
                                                   DKPORT_MTAG);

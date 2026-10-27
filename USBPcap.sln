@@ -1,0 +1,37 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USBPcap", "USBPcapDriver\USBPcap.vcxproj", "{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USBPcapCMD", "USBPcapCMD\USBPcapCMD.vcxproj", "{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Debug|ARM64.Build.0 = Debug|ARM64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Debug|x64.ActiveCfg = Debug|x64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Debug|x64.Build.0 = Debug|x64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Release|ARM64.ActiveCfg = Release|ARM64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Release|ARM64.Build.0 = Release|ARM64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Release|x64.ActiveCfg = Release|x64
+		{4F6C2A10-8B3E-4D1A-9C57-2E8A1B6D4F90}.Release|x64.Build.0 = Release|x64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Debug|ARM64.Build.0 = Debug|ARM64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Debug|x64.ActiveCfg = Debug|x64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Debug|x64.Build.0 = Debug|x64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Release|ARM64.ActiveCfg = Release|ARM64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Release|ARM64.Build.0 = Release|ARM64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Release|x64.ActiveCfg = Release|x64
+		{8A1D5C33-7E42-4F0B-B6A9-1C3D5E7F9021}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

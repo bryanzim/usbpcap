@@ -18,7 +18,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 {
     UCHAR  ucCnt = 0;
 
-/* Building for Windows 8 or newer. */
+/* Opt the legacy NonPagedPool type into non-executable pool.
+ * Windows Server 2025 rejects executable nonpaged allocations.
+ */
 #if _MSC_VER >= 1800
     ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 #endif

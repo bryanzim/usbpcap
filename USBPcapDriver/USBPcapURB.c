@@ -372,7 +372,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                 SIZE_T descSize = pSelectConfiguration->ConfigurationDescriptor->wTotalLength;
 
                 pDeviceData->descriptor =
-                    ExAllocatePoolWithTag(NonPagedPool,
+                    USBPcapAllocateNonPaged(
                                           descSize,
                                           (ULONG)'CSED');
 
@@ -1007,7 +1007,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                         (USHORT)(sizeof(USBPCAP_BUFFER_ISO_PACKET) *
                                  (transfer->NumberOfPackets - 1));
 
-            packetHeader = ExAllocatePoolWithTag(NonPagedPool,
+            packetHeader = USBPcapAllocateNonPaged(
                                                  (SIZE_T)headerLen,
                                                  ' RDH');
 
@@ -1093,7 +1093,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                     packetHeader->header.dataLength = (UINT32)compactedLength;
 
                     /* Allocate array of payload entries that will point to original data */
-                    compactedPayloadEntries = ExAllocatePoolWithTag(NonPagedPool,
+                    compactedPayloadEntries = USBPcapAllocateNonPaged(
                         (SIZE_T)(transfer->NumberOfPackets + 1) * sizeof(USBPCAP_PAYLOAD_ENTRY),
                         'COSI');
                     if (compactedPayloadEntries == NULL)

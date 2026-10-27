@@ -99,7 +99,7 @@ static PVOID
 USBPcapAllocateRoutine(IN PRTL_GENERIC_TABLE table,
                        IN CLONG size)
 {
-    return ExAllocatePoolWithTag(NonPagedPool,
+    return USBPcapAllocateNonPaged(
                                  size,
                                  USBPCAP_TABLE_TAG);
 }
@@ -156,7 +156,7 @@ PRTL_GENERIC_TABLE USBPcapInitializeEndpointTable(IN PVOID context)
     DkDbgStr("Initialize endpoint table");
 
     table = (PRTL_GENERIC_TABLE)
-                ExAllocatePoolWithTag(NonPagedPool,
+                USBPcapAllocateNonPaged(
                                       sizeof(RTL_GENERIC_TABLE),
                                       USBPCAP_TABLE_TAG);
 
@@ -315,7 +315,7 @@ PRTL_GENERIC_TABLE USBPcapInitializeURBIRPInfoTable(IN PVOID context)
     DkDbgStr("Initialize URB irp table");
 
     table = (PRTL_GENERIC_TABLE)
-                ExAllocatePoolWithTag(NonPagedPool,
+                USBPcapAllocateNonPaged(
                                       sizeof(RTL_GENERIC_TABLE),
                                       USBPCAP_TABLE_TAG);
 
