@@ -179,7 +179,7 @@ static LPTSTR * GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
     LPTSTR *array;
     int elements;
 
-    for (scan = MultiSz, elements = 0; scan[0] ;elements++)
+    for (scan = MultiSz, elements = 0; scan[0U] ;elements++)
     {
         scan += lstrlen(scan)+1;
     }
@@ -188,11 +188,11 @@ static LPTSTR * GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
     {
         return NULL;
     }
-    array[0] = MultiSz;
+    array[0U] = MultiSz;
     array++;
     if (elements)
     {
-        for (scan = MultiSz, elements = 0; scan[0]; elements++)
+        for (scan = MultiSz, elements = 0; scan[0U]; elements++)
         {
             array[elements] = scan;
             scan += lstrlen(scan) + 1;
@@ -230,7 +230,7 @@ static LPTSTR *GetDevMultiSz(DEVINST roothub, ULONG property)
         goto failed;
     }
 
-    if (size == 0)
+    if (size == 0U)
     {
         goto failed;
     }
@@ -271,9 +271,9 @@ static void DelMultiSz(__in_opt __drv_freesMem(object) LPTSTR* Array)
     if(Array)
     {
         Array--;
-        if(Array[0])
+        if(Array[0U])
         {
-            free(Array[0]);
+            free(Array[0U]);
         }
         free(Array);
     }
@@ -302,10 +302,10 @@ void find_non_standard_hwids(HDEVINFO devs,
 
         if (hwIds)
         {
-            for (tmpIds = hwIds; tmpIds[0] != NULL; tmpIds++)
+            for (tmpIds = hwIds; tmpIds[0U] != NULL; tmpIds++)
             {
-                printf("Hardware ID: %s\n", tmpIds[0]);
-                if (is_standard_hwid(tmpIds[0]) == TRUE)
+                printf("Hardware ID: %s\n", tmpIds[0U]);
+                if (is_standard_hwid(tmpIds[0U]) == TRUE)
                 {
                     printf("Found standard HWID\n");
                     standard = TRUE;
@@ -316,23 +316,23 @@ void find_non_standard_hwids(HDEVINFO devs,
             {
                 printf("RootHub does not have standard HWID! ");
 
-                if (is_non_standard_hwid_known(hwIds[0]) == TRUE)
+                if (is_non_standard_hwid_known(hwIds[0U]) == TRUE)
                 {
-                    printf("%s is already in the non-standard list.\n", hwIds[0]);
+                    printf("%s is already in the non-standard list.\n", hwIds[0U]);
                 }
                 else
                 {
-                    add_non_standard_hwid(hwIds[0]);
-                    printf("Added %s to non-standard list.\n", hwIds[0]);
+                    add_non_standard_hwid(hwIds[0U]);
+                    printf("Added %s to non-standard list.\n", hwIds[0U]);
                 }
             }
         }
 
         if (compatIds)
         {
-            for (tmpIds = compatIds; tmpIds[0] != NULL; tmpIds++)
+            for (tmpIds = compatIds; tmpIds[0U] != NULL; tmpIds++)
             {
-                printf("Compatible ID: %s\n", tmpIds[0]);
+                printf("Compatible ID: %s\n", tmpIds[0U]);
             }
         }
 
@@ -353,7 +353,7 @@ void restart_device(HDEVINFO devs,
 
     if (CM_Get_Device_ID_Ex(devInfo->DevInst, devID, MAX_DEVICE_ID_LEN, 0, devInfoListDetail->RemoteMachineHandle) != CR_SUCCESS)
     {
-        devID[0] = TEXT('\0');
+        devID[0U] = TEXT('\0');
         printf("Unknown instance ID: ");
     }
     else

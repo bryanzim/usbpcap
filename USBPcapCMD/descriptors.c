@@ -44,8 +44,8 @@ typedef struct _descriptor_callback_context
  */
 static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(HANDLE hub, ULONG port, UCHAR index)
 {
-    ULONG nBytes = 0;
-    ULONG nBytesReturned = 0;
+    ULONG nBytes = 0U;
+    ULONG nBytesReturned = 0U;
     UCHAR buffer[sizeof(USB_DESCRIPTOR_REQUEST) + sizeof(USB_CONFIGURATION_DESCRIPTOR)];
     PUSB_DESCRIPTOR_REQUEST request = NULL;
     PUSB_CONFIGURATION_DESCRIPTOR descriptor = NULL;
@@ -204,14 +204,14 @@ static void write_setup_packet(descriptor_callback_context *ctx,
     initialize_control_header(hdr, ctx->roothub, deviceAddress, 8,
                               USBPCAP_CONTROL_STAGE_SETUP, function, FALSE, out);
 
-    setup[0] = bmRequestType;
-    setup[1] = bRequest;
-    setup[2] = (wValue & 0x00FF);
-    setup[3] = (wValue & 0xFF00) >> 8;
-    setup[4] = (wIndex & 0x00FF);
-    setup[5] = (wIndex & 0xFF00) >> 8;
-    setup[6] = (wLength & 0x00FF);
-    setup[7] = (wLength & 0xFF00) >> 8;
+    setup[0U] = bmRequestType;
+    setup[1U] = bRequest;
+    setup[2U] = (wValue & 0x00FF);
+    setup[3U] = (wValue & 0xFF00) >> 8;
+    setup[4U] = (wIndex & 0x00FF);
+    setup[5U] = (wIndex & 0xFF00) >> 8;
+    setup[6U] = (wLength & 0x00FF);
+    setup[7U] = (wLength & 0xFF00) >> 8;
 
     add_to_list(ctx, data, data_len);
 }
@@ -251,24 +251,24 @@ write_device_descriptor_complete(descriptor_callback_context *ctx,
                               USBPCAP_CONTROL_STAGE_COMPLETE,
                               URB_CONTROL_TRANSFER,
                               TRUE, FALSE);
-    payload[0] = descriptor->bLength;
-    payload[1] = descriptor->bDescriptorType;
-    payload[2] = (descriptor->bcdUSB & 0x00FF);
-    payload[3] = (descriptor->bcdUSB & 0xFF00) >> 8;
-    payload[4] = descriptor->bDeviceClass;
-    payload[5] = descriptor->bDeviceSubClass;
-    payload[6] = descriptor->bDeviceProtocol;
-    payload[7] = descriptor->bMaxPacketSize0;
-    payload[8] = (descriptor->idVendor & 0x00FF);
-    payload[9] = (descriptor->idVendor & 0xFF00) >> 8;
-    payload[10] = (descriptor->idProduct & 0x00FF);
-    payload[11] = (descriptor->idProduct & 0xFF00) >> 8;
-    payload[12] = (descriptor->bcdDevice & 0x00FF);
-    payload[13] = (descriptor->bcdDevice & 0xFF00) >> 8;
-    payload[14] = descriptor->iManufacturer;
-    payload[15] = descriptor->iProduct;
-    payload[16] = descriptor->iSerialNumber;
-    payload[17] = descriptor->bNumConfigurations;
+    payload[0U] = descriptor->bLength;
+    payload[1U] = descriptor->bDescriptorType;
+    payload[2U] = (descriptor->bcdUSB & 0x00FF);
+    payload[3U] = (descriptor->bcdUSB & 0xFF00) >> 8;
+    payload[4U] = descriptor->bDeviceClass;
+    payload[5U] = descriptor->bDeviceSubClass;
+    payload[6U] = descriptor->bDeviceProtocol;
+    payload[7U] = descriptor->bMaxPacketSize0;
+    payload[8U] = (descriptor->idVendor & 0x00FF);
+    payload[9U] = (descriptor->idVendor & 0xFF00) >> 8;
+    payload[10U] = (descriptor->idProduct & 0x00FF);
+    payload[11U] = (descriptor->idProduct & 0xFF00) >> 8;
+    payload[12U] = (descriptor->bcdDevice & 0x00FF);
+    payload[13U] = (descriptor->bcdDevice & 0xFF00) >> 8;
+    payload[14U] = descriptor->iManufacturer;
+    payload[15U] = descriptor->iProduct;
+    payload[16U] = descriptor->iSerialNumber;
+    payload[17U] = descriptor->bNumConfigurations;
 
     add_to_list(ctx, data, data_len);
 }

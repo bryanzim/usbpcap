@@ -134,10 +134,10 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
         {
             HANDLE hHeap = GetProcessHeap();
 
-            WCHAR  cwBuffer[2048] = { 0 };
+            WCHAR  cwBuffer[2048U] = { 0 };
             LPWSTR pszBuffer      = cwBuffer;
             DWORD  dwMaxChars     = _countof(cwBuffer);
-            DWORD  dwLength       = 0;
+            DWORD  dwLength       = 0U;
 
             LPWSTR pszNew;
             SIZE_T nSize;
@@ -611,7 +611,7 @@ int cmd_interactive(struct thread_data *data)
     data->inject_descriptors = TRUE;
 
     filters_initialize();
-    if (usbpcapFilters[0] == NULL)
+    if (usbpcapFilters[0U] == NULL)
     {
         printf("No filter control devices are available.\n");
 
@@ -639,14 +639,14 @@ int cmd_interactive(struct thread_data *data)
             }
             else
             {
-                if (buffer[0] == 'y')
+                if (buffer[0U] == 'y')
                 {
                     finished = TRUE;
                     restart_all_usb_devices();
                     filters_free();
                     filters_initialize();
                 }
-                else if (buffer[0] == 'n')
+                else if (buffer[0U] == 'n')
                 {
                     filters_free();
                     return -1;
@@ -675,7 +675,7 @@ int cmd_interactive(struct thread_data *data)
         }
         else
         {
-            if (buffer[0] == 'q')
+            if (buffer[0U] == 'q')
             {
                 finished = TRUE;
                 exit = TRUE;
@@ -711,7 +711,7 @@ int cmd_interactive(struct thread_data *data)
         {
             printf("Invalid input\n");
         }
-        else if (buffer[0] == '\0')
+        else if (buffer[0U] == '\0')
         {
             printf("Empty filename not allowed\n");
         }
@@ -745,7 +745,7 @@ int cmd_interactive(struct thread_data *data)
  */
 static void wait_for_exit_signal(struct thread_data *data, HANDLE process)
 {
-    HANDLE handle_table[3] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
+    HANDLE handle_table[3U] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
     HANDLE stdin_handle = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dw;
     int count = 0;

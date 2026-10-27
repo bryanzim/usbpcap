@@ -44,7 +44,7 @@ typedef struct _OBJDIR_INFORMATION
 {
   UNICODE_STRING ObjectName;
   UNICODE_STRING ObjectTypeName;
-  BYTE Data[1];
+  BYTE Data[1U];
 } OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
 
 typedef struct _OBJECT_ATTRIBUTES
@@ -203,7 +203,7 @@ static BOOL find_usbpcap_filters(struct list *list,
                                   TRUE, FALSE, &index, &written) == 0)
     {
         const wchar_t *prefix = L"USBPcap";
-        size_t prefix_chars = 7;
+        size_t prefix_chars = 7U;
 
         if (wcsncmp(prefix, info->ObjectName.Buffer, prefix_chars) == 0)
         {
