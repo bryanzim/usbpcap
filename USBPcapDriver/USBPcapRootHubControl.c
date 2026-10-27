@@ -9,7 +9,7 @@
 #include "USBPcapRootHubControl.h"
 #include "Ntstrsafe.h"
 
-extern ULONG volatile g_controlId;
+extern volatile LONG g_controlId;
 
 #define NTNAME_PREFIX      L"\\Device\\USBPcap"
 #define SYMBOLIC_PREFIX    L"\\DosDevices\\USBPcap"
@@ -34,21 +34,27 @@ NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
     PDEVICE_EXTENSION  controlExt = NULL;
     NTSTATUS           status;
     USHORT             id;
-    PWCHAR             ntNameBuffer[MAX_NTNAME_LEN];
-    PWCHAR             symbolicNameBuffer[MAX_SYMBOLIC_LEN];
+    LONG               newId;
+    WCHAR              ntNameBuffer[MAX_NTNAME_LEN / sizeof(WCHAR)];
+    WCHAR              symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
 
     ASSERT(hubExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB);
 
-    /* Acquire the control device ID */
-    id = (USHORT) InterlockedIncrement(&g_controlId);
+    /* Acquire the control device ID. The pcap bus field is 16 bits. */
+    newId = InterlockedIncrement(&g_controlId);
+    if ((newId <= 0) || (newId > 0xFFFF))
+    {
+        return STATUS_INTEGER_OVERFLOW;
+    }
+    id = (USHORT)newId;
 
     ntDeviceName.Length = 0;
-    ntDeviceName.MaximumLength = MAX_NTNAME_LEN;
-    ntDeviceName.Buffer = (PWSTR)ntNameBuffer;
+    ntDeviceName.MaximumLength = sizeof(ntNameBuffer);
+    ntDeviceName.Buffer = ntNameBuffer;
 
     symbolicLinkName.Length = 0;
-    symbolicLinkName.MaximumLength = MAX_SYMBOLIC_LEN;
-    symbolicLinkName.Buffer = (PWSTR)symbolicNameBuffer;
+    symbolicLinkName.MaximumLength = sizeof(symbolicNameBuffer);
+    symbolicLinkName.Buffer = symbolicNameBuffer;
 
     status = RtlUnicodeStringPrintf(&ntDeviceName,
                                     NTNAME_PREFIX L"%hu", id);
@@ -101,6 +107,7 @@ NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
 
         /* Initialize USBPcap control context */
         controlExt->context.control.id             = id;
+        controlExt->context.control.removing       = FALSE;
         controlExt->context.control.pRootHubObject = hubExt->pThisDevObj;
         controlExt->context.control.pCaptureObject = NULL;
 
@@ -146,11 +153,16 @@ End:
 
 VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice)
 {
-    UNICODE_STRING     symbolicLinkName;
-    PWCHAR             symbolicNameBuffer[MAX_SYMBOLIC_LEN];
-    USHORT             id;
-    PDEVICE_EXTENSION  pDevExt;
-    NTSTATUS           status;
+    UNICODE_STRING         symbolicLinkName;
+    WCHAR                  symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
+    USHORT                 id;
+    PDEVICE_EXTENSION      pDevExt;
+    PDEVICE_EXTENSION      rootExt;
+    PUSBPCAP_ROOTHUB_DATA  pRootData;
+    LIST_ENTRY             drained;
+    PIRP                   pending;
+    KIRQL                  irql;
+    NTSTATUS               status;
 
     pDevExt = ((PDEVICE_EXTENSION)controlDevice->DeviceExtension);
 
@@ -159,11 +171,56 @@ VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice)
     id = pDevExt->context.control.id;
 
     symbolicLinkName.Length = 0;
-    symbolicLinkName.MaximumLength = MAX_SYMBOLIC_LEN;
-    symbolicLinkName.Buffer = (PWSTR)symbolicNameBuffer;
+    symbolicLinkName.MaximumLength = sizeof(symbolicNameBuffer);
+    symbolicLinkName.Buffer = symbolicNameBuffer;
 
     status = RtlUnicodeStringPrintf(&symbolicLinkName,
                                     SYMBOLIC_PREFIX L"%hu", id);
+
+    /* Stop new reads and finish the ones already queued before waiting
+     * for the remove lock. Queued reads hold that lock until completed.
+     */
+    InitializeListHead(&drained);
+    pRootData = NULL;
+    if (pDevExt->context.control.pRootHubObject != NULL)
+    {
+        rootExt = (PDEVICE_EXTENSION)pDevExt->context.control.pRootHubObject->DeviceExtension;
+        if (rootExt->context.usb.pDeviceData != NULL)
+        {
+            pRootData = rootExt->context.usb.pDeviceData->pRootData;
+        }
+    }
+
+    if (pRootData != NULL)
+    {
+        KeAcquireSpinLock(&pRootData->bufferLock, &irql);
+        pDevExt->context.control.removing = TRUE;
+        for (;;)
+        {
+            pending = IoCsqRemoveNextIrp(&pDevExt->context.control.ioCsq, NULL);
+            if (pending == NULL)
+            {
+                break;
+            }
+            InsertTailList(&drained, &pending->Tail.Overlay.ListEntry);
+        }
+        KeReleaseSpinLock(&pRootData->bufferLock, irql);
+    }
+    else
+    {
+        pDevExt->context.control.removing = TRUE;
+    }
+
+    while (!IsListEmpty(&drained))
+    {
+        pending = CONTAINING_RECORD(RemoveHeadList(&drained),
+                                    IRP,
+                                    Tail.Overlay.ListEntry);
+        pending->IoStatus.Status = STATUS_DEVICE_REMOVED;
+        pending->IoStatus.Information = 0;
+        IoCompleteRequest(pending, IO_NO_INCREMENT);
+        IoReleaseRemoveLock(&pDevExt->removeLock, pending);
+    }
 
     IoAcquireRemoveLock(&pDevExt->removeLock, NULL);
     IoReleaseRemoveLockAndWait(&pDevExt->removeLock, NULL);

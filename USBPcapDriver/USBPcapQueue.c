@@ -103,11 +103,16 @@ VOID DkCsqReleaseLock(__in PIO_CSQ pCsq, __in __drv_in(__drv_restoresIRQL) KIRQL
 
 VOID DkCsqCompleteCanceledIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 {
-    UNREFERENCED_PARAMETER(pCsq);
+    PDEVICE_EXTENSION pDevExt = NULL;
+
+    pDevExt = CONTAINING_RECORD(pCsq, DEVICE_EXTENSION,
+                                context.control.ioCsq);
 
     pIrp->IoStatus.Status = STATUS_CANCELLED;
     pIrp->IoStatus.Information = 0;
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+    /* Queued reads acquire the remove lock in DkReadWrite. */
+    IoReleaseRemoveLock(&pDevExt->removeLock, pIrp);
 }
 
 VOID DkCsqCleanUpQueue(PDEVICE_OBJECT pDevObj, PIRP pIrp)

@@ -6,19 +6,19 @@
 
 #include "USBPcapMain.h"
 
-/* Control device ID, used when creating roothub control devices
- *
- * Although this is 32-bit value (ULONG) we use only lower 16 bits
- * The reason for that is lack of InterlockedIncrement16 when building
- * for x86 processors
+/* Control device ID, used when creating roothub control devices.
+ * The capture bus field is a USHORT, so creation stops at 65535
+ * instead of reusing a device name.
  */
-ULONG volatile g_controlId;
+volatile LONG g_controlId;
 
 NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 {
-    UCHAR  ucCnt = 0;
+    UCHAR  ucCnt = 0U;
 
-/* Building for Windows 8 or newer. */
+/* Opt the legacy NonPagedPool type into non-executable pool.
+ * Windows Server 2025 rejects executable nonpaged allocations.
+ */
 #if _MSC_VER >= 1800
     ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 #endif
@@ -48,7 +48,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 
     pDrvObj->MajorFunction[IRP_MJ_POWER]                    = DkPower;
 
-    g_controlId = (ULONG)0;
+    g_controlId = 0;
 
     return STATUS_SUCCESS;
 }
@@ -136,7 +136,9 @@ NTSTATUS DkGenCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
 
     pEvt = (PKEVENT) pCtx;
     if (pEvt == NULL)
+    {
         return STATUS_UNSUCCESSFUL;
+    }
 
     KeSetEvent(pEvt, IO_NO_INCREMENT, FALSE);
 

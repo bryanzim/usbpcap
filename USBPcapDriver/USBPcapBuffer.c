@@ -125,7 +125,7 @@ static NTSTATUS USBPcapBufferWrite(PUSBPCAP_ROOTHUB_DATA pData,
                                    PVOID data,
                                    UINT32 length)
 {
-    if (length == 0)
+    if (length == 0U)
     {
         DkDbgStr("Cannot write empty data.");
         return STATUS_INVALID_PARAMETER;
@@ -257,7 +257,7 @@ NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
         return STATUS_INVALID_PARAMETER;
     }
 
-    buffer = ExAllocatePoolWithTag(NonPagedPool,
+    buffer = USBPcapAllocateNonPaged(
                                    (SIZE_T) bytes,
                                    USBPCAP_BUFFER_TAG);
 
@@ -438,9 +438,15 @@ NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
 
     /* Get data from data queue, if there is no data we put
      * this IRP to Cancel-Safe queue and return status pending
-     * otherwise complete this IRP then return SUCCESS
+     * otherwise complete this IRP then return SUCCESS.
+     * removing is set under this lock before queued reads are drained.
      */
     KeAcquireSpinLock(&pRootData->bufferLock, &irql);
+    if (pDevExt->context.control.removing)
+    {
+        KeReleaseSpinLock(&pRootData->bufferLock, irql);
+        return STATUS_DEVICE_REMOVED;
+    }
     bytesRead = USBPcapBufferRead(pRootData,
                                   buffer, bufferLength);
     *pBytesRead = bytesRead;
@@ -495,7 +501,7 @@ static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, 
     }
     else
     {
-        UINT32 bufferLength = MmGetMdlByteCount(pIrp->MdlAddress);
+        bufferLength = MmGetMdlByteCount(pIrp->MdlAddress);
 
         if (bufferLength != 0)
         {
@@ -514,6 +520,8 @@ static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, 
     /* release lock before completing the IRP! */
     KeReleaseSpinLock(&pRootData->bufferLock, irql);
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+    /* Acquired in DkReadWrite when this read was queued. */
+    IoReleaseRemoveLock(&pControlExt->removeLock, pIrp);
 }
 
 __inline static VOID
@@ -653,12 +661,12 @@ NTSTATUS USBPcapBufferWriteTimestampedPacket(PUSBPCAP_ROOTHUB_DATA pRootData,
                                              PUSBPCAP_BUFFER_PACKET_HEADER header,
                                              PVOID buffer)
 {
-    USBPCAP_PAYLOAD_ENTRY  payload[2];
+    USBPCAP_PAYLOAD_ENTRY  payload[2U];
 
-    payload[0].size   = header->dataLength;
-    payload[0].buffer = buffer;
-    payload[1].size   = 0;
-    payload[1].buffer = NULL;
+    payload[0U].size   = header->dataLength;
+    payload[0U].buffer = buffer;
+    payload[1U].size   = 0;
+    payload[1U].buffer = NULL;
 
     return USBPcapBufferWriteTimestampedPayload(pRootData, timestamp, header, payload);
 }

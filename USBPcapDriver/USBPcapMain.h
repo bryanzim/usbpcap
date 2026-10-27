@@ -26,6 +26,21 @@
 #include "Usbioctl.h"
 #include "Wdm.h"
 
+/*
+ * NonPagedPool is executable. Windows Server 2025 enables hypervisor-enforced
+ * code integrity, so those allocations fail. ExAllocatePool2 is also the
+ * allocator current WDK headers accept in place of ExAllocatePoolWithTag.
+ * POOL_FLAG_UNINITIALIZED keeps the previous uninitialized-memory contract.
+ */
+#if defined(NTDDI_WIN10_VB) && (NTDDI_VERSION >= NTDDI_WIN10_VB)
+#define USBPcapAllocateNonPaged(NumberOfBytes, Tag) \
+    ExAllocatePool2(POOL_FLAG_NON_PAGED | POOL_FLAG_UNINITIALIZED, \
+                    (SIZE_T)(NumberOfBytes), (ULONG)(Tag))
+#else
+#define USBPcapAllocateNonPaged(NumberOfBytes, Tag) \
+    ExAllocatePoolWithTag(NonPagedPool, (NumberOfBytes), (Tag))
+#endif
+
 #define DKPORT_DEVNAME_STR  L"\\Device\\DkSysPort" // Device name string
 #define DKPORT_DEVLINK_STR  L"\\DosDevices\\Global\\DkSysPort" // Link name string
 #define DKPORT_MTAG         (ULONG)'dk3A' // To tag memory allocation if any
@@ -106,6 +121,7 @@ typedef struct DEVICE_EXTENSION_Tag {
         struct
         {
             USHORT          id;
+            BOOLEAN         removing;        /* TRUE once delete has started */
             PDEVICE_OBJECT  pRootHubObject;  /* Root Hub object */
 
             /* Pointer to handle that can control capture and read the data.

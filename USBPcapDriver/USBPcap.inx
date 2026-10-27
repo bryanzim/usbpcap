@@ -4,8 +4,10 @@ Class               = USB
 ClassGuid           = {36FC9E60-C465-11CF-8056-444553540000}
 DriverPackageType   = ClassFilter
 Provider            = %PROVIDER%
+PnpLockdown         = 1
 CatalogFile.NTx86   = USBPcapx86.cat
 CatalogFile.NTamd64 = USBPcapamd64.cat
+CatalogFile.NTarm64 = USBPcaparm64.cat
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -50,6 +52,20 @@ DelService = USBPcap,0x00000200
 AddService = USBPcap,,Service.AddService
 
 [DefaultUninstall.NTamd64.Services]
+DelService = USBPcap,0x00000200
+
+[DefaultInstall.NTarm64]
+CopyFiles = @USBPcap.sys
+AddReg    = USBPcap.AddReg
+
+[DefaultUninstall.NTarm64]
+DelFiles  = @USBPcap.sys
+DelReg    = USBPcap.DelReg
+
+[DefaultInstall.NTarm64.Services]
+AddService = USBPcap,,Service.AddService
+
+[DefaultUninstall.NTarm64.Services]
 DelService = USBPcap,0x00000200
 
 [Service.AddService]
