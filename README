@@ -43,8 +43,13 @@ Installation:
   After installing, reboot.
 
   A catalog built for Server2025_X64 or Server2025_ARM64 does not replace a
-  Microsoft attestation signature. Production installs need an EV-signed
-  submission to the Hardware Dev Center.
+  Microsoft signature. driver_attestation_signing.bat packs the x64 and ARM64
+  driver, INF, symbols, and catalog into Release\attestation. Sign those
+  cabinets with an EV code signing certificate and submit them in Partner
+  Center for attestation signing. That signature is accepted on Windows 10
+  and Windows 11 desktop. Windows Server 2016 and later, including Server
+  2025, do not load an attestation-signed filter; a server release has to
+  pass the Hardware Lab Kit and be signed through the dashboard.
 
 Usage:
   Currently there is no capture engine dll.

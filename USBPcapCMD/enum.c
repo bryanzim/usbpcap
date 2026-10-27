@@ -533,10 +533,10 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
     ULONG      level;
     ULONG      len;
     TCHAR      buf[MAX_DEVICE_ID_LEN];
-    USHORT     parentNode = 0;
-    USHORT     nextNode = 1;
+    USHORT     parentNode = 0U;
+    USHORT     nextNode = 1U;
     Stack      *nodeStack = NULL;
-    DWORD      sanityCounter = 0;
+    DWORD      sanityCounter = 0U;
 
     level = indent;
     current = parent;
@@ -560,7 +560,7 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
             fprintf(stderr, "Sanity check failed in PrintDevinstChildren()\n");
             return;
         }
-        len = sizeof(buf) / sizeof(buf[0]);
+        len = sizeof(buf) / sizeof(buf[0U]);
         cr = CM_Get_DevNode_Registry_PropertyW(current,
                                                CM_DRP_FRIENDLYNAME,
                                                NULL,
@@ -569,7 +569,7 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                                                0);
         if (cr != CR_SUCCESS)
         {
-            len = sizeof(buf) / sizeof(buf[0]);
+            len = sizeof(buf) / sizeof(buf[0U]);
             /* Failed to get friendly name,
              * display device description instead */
             cr = CM_Get_DevNode_Registry_PropertyW(current,
@@ -580,7 +580,7 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                                                    0);
         }
 
-        if (cr == CR_SUCCESS && (((PWSTR)buf)[0] != L'\0'))
+        if (cr == CR_SUCCESS && (((PWSTR)buf)[0U] != L'\0'))
         {
             if (!stack_peek(&nodeStack, &parentNode))
             {
@@ -654,13 +654,13 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
     DEVINST    devInst;
     DEVINST    devInstNext;
     CONFIGRET  cr;
-    ULONG      walkDone = 0;
+    ULONG      walkDone = 0U;
     ULONG      len;
     TCHAR      buf[MAX_DEVICE_ID_LEN];
 
     // Sanity counters to prevent endless loops
-    DWORD      sanityOuter = 0;
-    DWORD      sanityInner = 0;
+    DWORD      sanityOuter = 0U;
+    DWORD      sanityInner = 0U;
 
     // Get Root DevNode
     cr = CM_Locate_DevNode(&devInst, NULL, 0);
@@ -680,7 +680,7 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
             return;
         }
         // Get the DriverName value
-        len = sizeof(buf) / sizeof(buf[0]);
+        len = sizeof(buf) / sizeof(buf[0U]);
         cr = CM_Get_DevNode_Registry_Property(devInst,
                                               CM_DRP_DRIVER,
                                               NULL,
@@ -693,7 +693,7 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
         {
             if (_tcsicmp(DriverName, buf) == 0)
             {
-                len = sizeof(buf) / sizeof(buf[0]);
+                len = sizeof(buf) / sizeof(buf[0U]);
 
                 cr = CM_Get_DevNode_Registry_PropertyW(devInst,
                                                        CM_DRP_DEVICEDESC,
@@ -906,9 +906,9 @@ static void EnumerateHub(PTSTR hub,
     {
         /* Replace the \??\ with \\.\ */
         _tcscpy_s(deviceName, deviceNameSize, _T("\\\\.\\"));
-        _tcscat_s(deviceName, deviceNameSize, &hub[4]);
+        _tcscat_s(deviceName, deviceNameSize, &hub[4U]);
     }
-    else if (hub[0] == _T('\\'))
+    else if (hub[0U] == _T('\\'))
     {
         _tcscpy_s(deviceName, deviceNameSize, hub);
     }
@@ -991,7 +991,7 @@ get_usbpcap_filter_hub_symlink(const char *filter,
                                DWORD outBufSize)
 {
     HANDLE filter_handle;
-    DWORD  bytes_ret = 0;
+    DWORD  bytes_ret = 0U;
 
     filter_handle = CreateFileA(filter,
                                 0,
@@ -1028,7 +1028,7 @@ void enumerate_print_usbpcap_interactive(const char *filter)
     WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
     DWORD  bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0], sizeof(outBuf)/sizeof(outBuf[0]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;
@@ -1048,7 +1048,7 @@ void enumerate_print_extcap_config(const char *filter)
     WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
     DWORD  bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0], sizeof(outBuf)/sizeof(outBuf[0]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;
@@ -1064,7 +1064,7 @@ void enumerate_all_connected_devices(const char *filter, EnumConnectedPortCallba
     WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
     DWORD  bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0], sizeof(outBuf)/sizeof(outBuf[0]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;

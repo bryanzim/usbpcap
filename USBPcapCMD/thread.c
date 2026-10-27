@@ -17,7 +17,7 @@ HANDLE create_filter_read_handle(struct thread_data *data)
 {
     HANDLE filter_handle = INVALID_HANDLE_VALUE;
     char* inBuf = NULL;
-    DWORD inBufSize = 0;
+    DWORD inBufSize = 0U;
     DWORD bytes_ret;
 
     if (data->capture_new)
@@ -186,7 +186,7 @@ DWORD WINAPI read_thread(LPVOID param)
     OVERLAPPED write_handle_read_overlapped; /* Used to detect broken pipe. */
     DWORD read;
     DWORD err;
-    HANDLE table[5];
+    HANDLE table[5U];
     int table_count = 0;
 
     memset(&table, 0, sizeof(table));
