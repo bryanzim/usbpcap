@@ -8,27 +8,23 @@
 #include "USBPcapMain.h"
 #include "USBPcapHelperFunctions.h"
 
-static
-NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
-                                PWCHAR *plocation);
-static
-NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
-                                 ULONG port,
-                                 PUSB_NODE_CONNECTION_DRIVERKEY_NAME *ppname);
-static
-NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
-                                    PDEVICE_OBJECT pdo_device,
-                                    PULONG port);
-static
-NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
-                                   ULONG port,
-                                   USB_NODE_CONNECTION_INFORMATION *info);
+static NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
+                                       PWCHAR* plocation);
+static NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
+                                        ULONG port,
+                                        PUSB_NODE_CONNECTION_DRIVERKEY_NAME* ppname);
+static NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
+                                           PDEVICE_OBJECT pdo_device,
+                                           PULONG port);
+static NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
+                                          ULONG port,
+                                          USB_NODE_CONNECTION_INFORMATION* info);
 
 #ifdef ALLOC_PRAGMA
-#pragma alloc_text (PAGE, USBPcapGetPDODriverKey)
-#pragma alloc_text (PAGE, USBPcapGetDriverKeyName)
-#pragma alloc_text (PAGE, USBPcapGetTargetDevicePort)
-#pragma alloc_text (PAGE, USBPcapGetNodeInformation)
+#pragma alloc_text(PAGE, USBPcapGetPDODriverKey)
+#pragma alloc_text(PAGE, USBPcapGetDriverKeyName)
+#pragma alloc_text(PAGE, USBPcapGetTargetDevicePort)
+#pragma alloc_text(PAGE, USBPcapGetNodeInformation)
 #endif
 
 /*
@@ -38,15 +34,15 @@ NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
  * needed.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
-                                   OUT PDEVICE_OBJECT *pdo)
+    NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
+                                       OUT PDEVICE_OBJECT* pdo)
 {
-    KEVENT              event;
-    NTSTATUS            status;
-    PIRP                irp;
-    IO_STATUS_BLOCK     ioStatusBlock;
-    PIO_STACK_LOCATION  irpStack;
-    PDEVICE_RELATIONS   deviceRelations;
+    KEVENT event;
+    NTSTATUS status;
+    PIRP irp;
+    IO_STATUS_BLOCK ioStatusBlock;
+    PIO_STACK_LOCATION irpStack;
+    PDEVICE_RELATIONS deviceRelations;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
@@ -82,7 +78,8 @@ NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
         status = ioStatusBlock.Status;
     }
 
-    if (NT_SUCCESS(status)) {
+    if (NT_SUCCESS(status))
+    {
         deviceRelations = (PDEVICE_RELATIONS)ioStatusBlock.Information;
         ASSERT(deviceRelations);
 
@@ -198,10 +195,8 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
  *
  * On Success, the plocation buffer must be freed using ExFreePool.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static
-NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
-                                PWCHAR *plocation)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
+                                                                         PWCHAR* plocation)
 {
     NTSTATUS status;
     ULONG length;
@@ -243,8 +238,8 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
     }
 
     *plocation = (PWCHAR)USBPcapAllocateNonPaged(
-                                               length,
-                                               ' YEK');
+        length,
+        ' YEK');
     if (*plocation == NULL)
     {
         DkDbgStr("Unable to allocate driver key name");
@@ -277,19 +272,17 @@ NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
  *
  * On Success, the *ppname must be freed using ExFreePool.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static
-NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
-                                 ULONG port,
-                                 PUSB_NODE_CONNECTION_DRIVERKEY_NAME *ppname)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
+                                                                          ULONG port,
+                                                                          PUSB_NODE_CONNECTION_DRIVERKEY_NAME* ppname)
 {
-    USB_NODE_CONNECTION_DRIVERKEY_NAME   name;
-    SIZE_T                               pnameLength;
-    KEVENT                               event;
-    PIRP                                 irp;
-    IO_STATUS_BLOCK                      ioStatus;
-    NTSTATUS                             status;
-    UNICODE_STRING                       str;
+    USB_NODE_CONNECTION_DRIVERKEY_NAME name;
+    SIZE_T pnameLength;
+    KEVENT event;
+    PIRP irp;
+    IO_STATUS_BLOCK ioStatus;
+    NTSTATUS status;
+    UNICODE_STRING str;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
@@ -301,13 +294,13 @@ NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
     name.ConnectionIndex = port;
 
     irp = IoBuildDeviceIoControlRequest(
-              IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
-              parent,
-              &name, sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME),
-              &name, sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME),
-              FALSE,
-              &event,
-              &ioStatus);
+        IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
+        parent,
+        &name, sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME),
+        &name, sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME),
+        FALSE,
+        &event,
+        &ioStatus);
 
     if (irp == NULL)
     {
@@ -342,7 +335,7 @@ NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
                   sizeof(WCHAR) + /* Extra data to NULL-terminate */
                   sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
     *ppname = (PUSB_NODE_CONNECTION_DRIVERKEY_NAME)
-                  USBPcapAllocateNonPaged( pnameLength, 'EDON');
+        USBPcapAllocateNonPaged(pnameLength, 'EDON');
 
     if (*ppname == NULL)
     {
@@ -358,13 +351,13 @@ NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
     (*ppname)->ConnectionIndex = port;
 
     irp = IoBuildDeviceIoControlRequest(
-              IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
-              parent,
-              *ppname, (ULONG)pnameLength,
-              *ppname, (ULONG)pnameLength,
-              FALSE,
-              &event,
-              &ioStatus);
+        IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME,
+        parent,
+        *ppname, (ULONG)pnameLength,
+        *ppname, (ULONG)pnameLength,
+        FALSE,
+        &event,
+        &ioStatus);
 
     if (irp == NULL)
     {
@@ -411,19 +404,17 @@ NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
 }
 
 
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static
-NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
-                                    PDEVICE_OBJECT pdo_device,
-                                    PULONG port)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
+                                                                             PDEVICE_OBJECT pdo_device,
+                                                                             PULONG port)
 {
-    NTSTATUS                             status;
-    ULONG                                maxIndex;
-    ULONG                                idx;
-    PWCHAR                               pdo_driverkey = NULL;
-    UNICODE_STRING                       pdo_str;
-    PUSB_NODE_CONNECTION_DRIVERKEY_NAME  pname;
-    BOOLEAN                              found;
+    NTSTATUS status;
+    ULONG maxIndex;
+    ULONG idx;
+    PWCHAR pdo_driverkey = NULL;
+    UNICODE_STRING pdo_str;
+    PUSB_NODE_CONNECTION_DRIVERKEY_NAME pname;
+    BOOLEAN found;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
@@ -496,16 +487,14 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
  * NodeType is UsbHub, and composite-parent information only when
  * NodeType is UsbMIParent. Ask for one type.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static
-NTSTATUS USBPcapQueryNodeInformation(PDEVICE_OBJECT parent,
-                                     USB_HUB_NODE nodeType,
-                                     USB_NODE_INFORMATION *info)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapQueryNodeInformation(PDEVICE_OBJECT parent,
+                                                                              USB_HUB_NODE nodeType,
+                                                                              USB_NODE_INFORMATION* info)
 {
-    KEVENT           event;
-    PIRP             irp;
-    IO_STATUS_BLOCK  ioStatus;
-    NTSTATUS         status;
+    KEVENT event;
+    PIRP irp;
+    IO_STATUS_BLOCK ioStatus;
+    NTSTATUS status;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
@@ -541,11 +530,11 @@ NTSTATUS USBPcapQueryNodeInformation(PDEVICE_OBJECT parent,
 }
 
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
-                                 PULONG numberOfPorts)
+    NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
+                                     PULONG numberOfPorts)
 {
-    USB_NODE_INFORMATION  info;
-    NTSTATUS              status;
+    USB_NODE_INFORMATION info;
+    NTSTATUS status;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
@@ -593,11 +582,9 @@ NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
     return status;
 }
 
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static
-NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
-                                   ULONG port,
-                                   USB_NODE_CONNECTION_INFORMATION *info)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
+                                                                            ULONG port,
+                                                                            USB_NODE_CONNECTION_INFORMATION* info)
 {
     KEVENT event;
     PIRP irp;
@@ -614,13 +601,13 @@ NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
     irp = IoBuildDeviceIoControlRequest(
-              IOCTL_USB_GET_NODE_CONNECTION_INFORMATION,
-              hub,
-              info, sizeof(USB_NODE_CONNECTION_INFORMATION),
-              info, sizeof(USB_NODE_CONNECTION_INFORMATION),
-              FALSE,
-              &event,
-              &ioStatus);
+        IOCTL_USB_GET_NODE_CONNECTION_INFORMATION,
+        hub,
+        info, sizeof(USB_NODE_CONNECTION_INFORMATION),
+        info, sizeof(USB_NODE_CONNECTION_INFORMATION),
+        FALSE,
+        &event,
+        &ioStatus);
 
     if (irp == NULL)
     {
@@ -633,10 +620,10 @@ NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
     {
         /* Wait for IRP to be completed */
         status = KeWaitForSingleObject(&event,
-                                       Executive,  /* wait reason */
+                                       Executive, /* wait reason */
                                        KernelMode,
-                                       FALSE,      /* not alertable */
-                                       NULL);      /* no timeout */
+                                       FALSE, /* not alertable */
+                                       NULL); /* no timeout */
 
         status = ioStatus.Status;
     }
@@ -661,7 +648,7 @@ NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
 
 #if DBG
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub)
+    NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub)
 {
     USB_NODE_CONNECTION_INFORMATION info;
     NTSTATUS status;
@@ -693,7 +680,7 @@ NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub)
  * parentPort, isHub, deviceAddress.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt)
+    NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt)
 {
     USB_NODE_CONNECTION_INFORMATION info;
     NTSTATUS status;
@@ -744,8 +731,8 @@ NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt)
 
         DkDbgVal("", info.DeviceAddress);
 
-        pDevExt->context.usb.pDeviceData->properData    = TRUE;
-        pDevExt->context.usb.pDeviceData->isHub         = info.DeviceIsHub;
+        pDevExt->context.usb.pDeviceData->properData = TRUE;
+        pDevExt->context.usb.pDeviceData->isHub = info.DeviceIsHub;
         pDevExt->context.usb.pDeviceData->deviceAddress = info.DeviceAddress;
 
         /* Set device filtered if capture from new devices is enabled. */
@@ -813,8 +800,7 @@ static NTSTATUS QueryCompareHwid(PWSTR ValueName, ULONG ValueType,
  *
  * Returns TRUE if hwid is in the list, FALSE otherwise.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL)
-static BOOLEAN IsHwidNonStandardRootHub(PWSTR hwid)
+__drv_requiresIRQL(PASSIVE_LEVEL) static BOOLEAN IsHwidNonStandardRootHub(PWSTR hwid)
 {
     RTL_QUERY_REGISTRY_TABLE table[2U];
     NTSTATUS status;
@@ -855,24 +841,24 @@ static BOOLEAN IsHwidNonStandardRootHub(PWSTR hwid)
  * Returns TRUE if device is root hub, FALSE otherwise.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
+    BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
 {
-    NTSTATUS        status;
-    PDEVICE_OBJECT  pdo;
-    WCHAR           *hwid;
-    WCHAR           *hardwareIds[MAX_HARDWARE_IDS] = {NULL};
-    ULONG           length;
-    ULONG           i;
-    ULONG           id;
-    ULONG           start;
-    BOOLEAN         found = FALSE;
+    NTSTATUS status;
+    PDEVICE_OBJECT pdo;
+    WCHAR* hwid;
+    WCHAR* hardwareIds[MAX_HARDWARE_IDS] = { NULL };
+    ULONG length;
+    ULONG i;
+    ULONG id;
+    ULONG start;
+    BOOLEAN found = FALSE;
 
     PAGED_CODE();
     ASSERT(KeGetCurrentIrql() <= PASSIVE_LEVEL);
 
     hwid = (WCHAR*)USBPcapAllocateNonPaged(
-                                         REGSTR_VAL_MAX_HCID_LEN,
-                                         'DIWH');
+        REGSTR_VAL_MAX_HCID_LEN,
+        'DIWH');
 
     if (hwid == NULL)
     {
@@ -907,7 +893,7 @@ BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
 
     id = 0;
     start = 0;
-    for (i = 0; i < (length/sizeof(WCHAR)); i++)
+    for (i = 0; i < (length / sizeof(WCHAR)); i++)
     {
         if (hwid[i] == L'\0')
         {
@@ -920,7 +906,7 @@ BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
             {
                 hardwareIds[id] = &hwid[start];
                 id++;
-                start = i+1;
+                start = i + 1;
             }
         }
     }
@@ -975,7 +961,7 @@ BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
  * On failure returns NULL.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-PWSTR USBPcapGetHubInterfaces(PDEVICE_OBJECT hub)
+    PWSTR USBPcapGetHubInterfaces(PDEVICE_OBJECT hub)
 {
     NTSTATUS status;
     PDEVICE_OBJECT pdo;
@@ -1013,7 +999,7 @@ PWSTR USBPcapGetHubInterfaces(PDEVICE_OBJECT hub)
  *
  * Returns TRUE on success (address is within <0; 127>), FALSE otherwise.
  */
-static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8 *range, UINT8 *index)
+static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* index)
 {
     if ((address < 0) || (address > 127))
     {
@@ -1072,7 +1058,7 @@ BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
 
 LARGE_INTEGER USBPcapGetCurrentTimestamp(VOID)
 {
-    LARGE_INTEGER  timestamp;
+    LARGE_INTEGER timestamp;
 
 #if (NTDDI_VERSION <= NTDDI_WIN7)
     /*

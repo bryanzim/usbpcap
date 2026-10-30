@@ -9,11 +9,11 @@
 
 struct filters
 {
-    char *device; /* \\.\USBPcapX */
+    char* device; /* \\.\USBPcapX */
 };
 
 /* NULL-terminated array of pointers to struct filters */
-extern struct filters **usbpcapFilters;
+extern struct filters** usbpcapFilters;
 
 void filters_initialize();
 void filters_free();

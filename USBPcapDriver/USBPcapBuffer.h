@@ -11,8 +11,8 @@
 
 typedef struct
 {
-    UINT32  size;
-    PVOID   buffer;
+    UINT32 size;
+    PVOID buffer;
 } USBPCAP_PAYLOAD_ENTRY, *PUSBPCAP_PAYLOAD_ENTRY;
 
 NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,

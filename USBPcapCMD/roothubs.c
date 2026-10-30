@@ -15,29 +15,30 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct {
-    LPTSTR *array;
+typedef struct
+{
+    LPTSTR* array;
     int used;
     int size;
 } StringArray;
 
 static StringArray non_standard_hwids; /* Stores non standard HWIDs. */
 
-static void init_string_array(StringArray *a, int initial_size)
+static void init_string_array(StringArray* a, int initial_size)
 {
-    a->array = (LPTSTR *)malloc(initial_size * sizeof(LPTSTR));
+    a->array = (LPTSTR*)malloc(initial_size * sizeof(LPTSTR));
     a->used = 0;
     a->size = initial_size;
 }
 
-static void insert_string_array(StringArray *a, LPTSTR hwid)
+static void insert_string_array(StringArray* a, LPTSTR hwid)
 {
     if (a->used == a->size)
     {
-        LPTSTR *tmp;
+        LPTSTR* tmp;
 
         a->size *= 2;
-        tmp = (LPTSTR *)realloc(a->array, a->size * sizeof(LPTSTR));
+        tmp = (LPTSTR*)realloc(a->array, a->size * sizeof(LPTSTR));
         if (tmp == NULL)
         {
             fprintf(stderr, "failed to insert %s to string array!\n",
@@ -50,7 +51,7 @@ static void insert_string_array(StringArray *a, LPTSTR hwid)
     a->array[a->used++] = _tcsdup(hwid);
 }
 
-static void free_string_array(StringArray *a)
+static void free_string_array(StringArray* a)
 {
     int i;
     for (i = 0; i < a->used; i++)
@@ -103,8 +104,8 @@ static BOOL is_non_standard_hwid_known(LPTSTR hwid)
     return FALSE;
 }
 
-static PTSTR build_non_standard_reg_multi_sz(StringArray *a,
-                                             int *length)
+static PTSTR build_non_standard_reg_multi_sz(StringArray* a,
+                                             int* length)
 {
     PTSTR multi_sz;
     PTSTR ptr;
@@ -112,7 +113,7 @@ static PTSTR build_non_standard_reg_multi_sz(StringArray *a,
     int i;
     int len;
 
-    for (len=1, i=0; i<a->used; i++)
+    for (len = 1, i = 0; i < a->used; i++)
     {
         len += _tcslen(a->array[i]) + 1;
     }
@@ -146,11 +147,11 @@ static void set_non_standard_hwids_reg_key(PTSTR multi_sz, int length)
     if (regVal == ERROR_SUCCESS)
     {
         regVal = RegSetValueEx(hkey,
-                       _T("NonStandardHWIDs"),
-                       0,
-                       REG_MULTI_SZ,
-                       (const BYTE*)multi_sz,
-                       length);
+                               _T("NonStandardHWIDs"),
+                               0,
+                               REG_MULTI_SZ,
+                               (const BYTE*)multi_sz,
+                               length);
 
         if (regVal != ERROR_SUCCESS)
         {
@@ -172,19 +173,18 @@ static void set_non_standard_hwids_reg_key(PTSTR multi_sz, int length)
  * Array must be freed using DelMultiSz().
  * Returns NULL on failure.
  */
-__drv_allocatesMem(object)
-static LPTSTR * GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
+__drv_allocatesMem(object) static LPTSTR* GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
 {
     LPTSTR scan;
-    LPTSTR *array;
+    LPTSTR* array;
     int elements;
 
-    for (scan = MultiSz, elements = 0; scan[0U] ;elements++)
+    for (scan = MultiSz, elements = 0; scan[0U]; elements++)
     {
-        scan += lstrlen(scan)+1;
+        scan += lstrlen(scan) + 1;
     }
-    array = (LPTSTR*)malloc(sizeof(LPTSTR) * (elements+2));
-    if(!array)
+    array = (LPTSTR*)malloc(sizeof(LPTSTR) * (elements + 2));
+    if (!array)
     {
         return NULL;
     }
@@ -209,13 +209,12 @@ static LPTSTR * GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
  * Array must be freed using DelMultiSz().
  * Returns NULL on failure.
  */
-__drv_allocatesMem(object)
-static LPTSTR *GetDevMultiSz(DEVINST roothub, ULONG property)
+__drv_allocatesMem(object) static LPTSTR* GetDevMultiSz(DEVINST roothub, ULONG property)
 {
     LPTSTR buffer;
     ULONG size;
     ULONG dataType;
-    LPTSTR * array;
+    LPTSTR* array;
     DWORD szChars;
     CONFIGRET ret;
 
@@ -234,7 +233,7 @@ static LPTSTR *GetDevMultiSz(DEVINST roothub, ULONG property)
     {
         goto failed;
     }
-    buffer = malloc(sizeof(TCHAR)*((size/sizeof(TCHAR))+2));
+    buffer = malloc(sizeof(TCHAR) * ((size / sizeof(TCHAR)) + 2));
     if (!buffer)
     {
         goto failed;
@@ -245,9 +244,9 @@ static LPTSTR *GetDevMultiSz(DEVINST roothub, ULONG property)
 
     if (ret == CR_SUCCESS)
     {
-        szChars = size/sizeof(TCHAR);
+        szChars = size / sizeof(TCHAR);
         buffer[szChars] = TEXT('\0');
-        buffer[szChars+1] = TEXT('\0');
+        buffer[szChars + 1] = TEXT('\0');
         array = GetMultiSzIndexArray(buffer);
         if (array)
         {
@@ -268,10 +267,10 @@ failed:
  */
 static void DelMultiSz(__in_opt __drv_freesMem(object) LPTSTR* Array)
 {
-    if(Array)
+    if (Array)
     {
         Array--;
-        if(Array[0U])
+        if (Array[0U])
         {
             free(Array[0U]);
         }
@@ -284,9 +283,9 @@ void find_non_standard_hwids(HDEVINFO devs,
                              PSP_DEVINFO_DATA devInfo,
                              PSP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail)
 {
-    LPTSTR *hwIds = NULL;
-    LPTSTR *compatIds = NULL;
-    LPTSTR *tmpIds = NULL;
+    LPTSTR* hwIds = NULL;
+    LPTSTR* compatIds = NULL;
+    LPTSTR* tmpIds = NULL;
     CONFIGRET cr;
     DEVINST roothub;
 
@@ -376,7 +375,7 @@ void restart_device(HDEVINFO devs,
     {
         devParams.cbSize = sizeof(devParams);
 
-        if (SetupDiGetDeviceInstallParams(devs,devInfo,&devParams) &&
+        if (SetupDiGetDeviceInstallParams(devs, devInfo, &devParams) &&
             (devParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT)))
         {
             printf("Reboot required.\n");
@@ -399,10 +398,10 @@ static void foreach_host_controller(
     SP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail;
 
     devs = SetupDiGetClassDevsEx(&GUID_DEVINTERFACE_USB_HOST_CONTROLLER,
-            NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT,
-            NULL, NULL, NULL);
+                                 NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT,
+                                 NULL, NULL, NULL);
 
-    if(devs == INVALID_HANDLE_VALUE)
+    if (devs == INVALID_HANDLE_VALUE)
     {
         fprintf(stderr, "SetupDiCreateDeviceInfoListEx() failed\n");
         goto final;

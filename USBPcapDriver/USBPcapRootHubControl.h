@@ -10,8 +10,8 @@
 #include "USBPcapMain.h"
 
 NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
-                                           OUT PDEVICE_OBJECT *control,
-                                           OUT USHORT *busId);
+                                           OUT PDEVICE_OBJECT* control,
+                                           OUT USHORT* busId);
 
 VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice);
 

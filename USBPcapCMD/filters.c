@@ -10,21 +10,21 @@
 #include <tchar.h>
 #include "filters.h"
 
-struct filters **usbpcapFilters = NULL;
+struct filters** usbpcapFilters = NULL;
 
 struct list_entry;
 
 struct list
 {
-    struct list_entry *head;
-    struct list_entry *tail;
+    struct list_entry* head;
+    struct list_entry* tail;
     int count;
 };
 
 struct list_entry
 {
-    char *device;
-    struct list_entry *next;
+    char* device;
+    struct list_entry* next;
 };
 
 #define BUFFER_SIZE 0x1000
@@ -35,55 +35,56 @@ struct list_entry
 
 typedef struct _LSA_UNICODE_STRING
 {
-  USHORT Length;
-  USHORT MaximumLength;
-  PWSTR Buffer;
+    USHORT Length;
+    USHORT MaximumLength;
+    PWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
 typedef struct _OBJDIR_INFORMATION
 {
-  UNICODE_STRING ObjectName;
-  UNICODE_STRING ObjectTypeName;
-  BYTE Data[1U];
+    UNICODE_STRING ObjectName;
+    UNICODE_STRING ObjectTypeName;
+    BYTE Data[1U];
 } OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
 
 typedef struct _OBJECT_ATTRIBUTES
 {
-  ULONG Length;
-  HANDLE RootDirectory;
-  UNICODE_STRING *ObjectName;
-  ULONG Attributes;
-  PVOID SecurityDescriptor;
-  PVOID SecurityQualityOfService;
+    ULONG Length;
+    HANDLE RootDirectory;
+    UNICODE_STRING* ObjectName;
+    ULONG Attributes;
+    PVOID SecurityDescriptor;
+    PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES;
 
-typedef NTSTATUS (WINAPI* NTQUERYDIRECTORYOBJECT)(HANDLE,
-                                                  OBJDIR_INFORMATION*,
-                                                  DWORD,
-                                                  DWORD,
-                                                  DWORD,
-                                                  DWORD*,
-                                                  DWORD*);
-
-typedef NTSTATUS (WINAPI* NTOPENDIRECTORYOBJECT)(HANDLE*,
+typedef NTSTATUS(WINAPI* NTQUERYDIRECTORYOBJECT)(HANDLE,
+                                                 OBJDIR_INFORMATION*,
                                                  DWORD,
-                                                 OBJECT_ATTRIBUTES*);
+                                                 DWORD,
+                                                 DWORD,
+                                                 DWORD*,
+                                                 DWORD*);
 
-#define InitializeObjectAttributes(p, n, a, r, s) { \
-    (p)->Length = sizeof( OBJECT_ATTRIBUTES ); \
-    (p)->RootDirectory = r; \
-    (p)->Attributes = a; \
-    (p)->ObjectName = n; \
-    (p)->SecurityDescriptor = s; \
-    (p)->SecurityQualityOfService = NULL; \
-}
+typedef NTSTATUS(WINAPI* NTOPENDIRECTORYOBJECT)(HANDLE*,
+                                                DWORD,
+                                                OBJECT_ATTRIBUTES*);
 
-typedef NTSTATUS (WINAPI* NTCLOSE)(HANDLE);
+#define InitializeObjectAttributes(p, n, a, r, s) \
+    {                                             \
+        (p)->Length = sizeof(OBJECT_ATTRIBUTES);  \
+        (p)->RootDirectory = r;                   \
+        (p)->Attributes = a;                      \
+        (p)->ObjectName = n;                      \
+        (p)->SecurityDescriptor = s;              \
+        (p)->SecurityQualityOfService = NULL;     \
+    }
+
+typedef NTSTATUS(WINAPI* NTCLOSE)(HANDLE);
 
 static HMODULE ntdll_handle;
-NTQUERYDIRECTORYOBJECT  NtQueryDirectoryObject;
-NTOPENDIRECTORYOBJECT   NtOpenDirectoryObject;
-NTCLOSE                 NtClose;
+NTQUERYDIRECTORYOBJECT NtQueryDirectoryObject;
+NTOPENDIRECTORYOBJECT NtOpenDirectoryObject;
+NTCLOSE NtClose;
 
 #define DIRECTORY_QUERY 0x0001
 
@@ -108,8 +109,8 @@ static BOOL init_undocumented()
     atexit(unload_undocumented);
 
     NtQueryDirectoryObject =
-        (NTQUERYDIRECTORYOBJECT) GetProcAddress(ntdll_handle,
-                                                "NtQueryDirectoryObject");
+        (NTQUERYDIRECTORYOBJECT)GetProcAddress(ntdll_handle,
+                                               "NtQueryDirectoryObject");
 
     if (NtQueryDirectoryObject == NULL)
     {
@@ -117,14 +118,14 @@ static BOOL init_undocumented()
     }
 
     NtOpenDirectoryObject =
-        (NTOPENDIRECTORYOBJECT) GetProcAddress(ntdll_handle,
-                                               "NtOpenDirectoryObject");
+        (NTOPENDIRECTORYOBJECT)GetProcAddress(ntdll_handle,
+                                              "NtOpenDirectoryObject");
     if (NtOpenDirectoryObject == NULL)
     {
         return FALSE;
     }
 
-    NtClose = (NTCLOSE) GetProcAddress(ntdll_handle, "NtClose");
+    NtClose = (NTCLOSE)GetProcAddress(ntdll_handle, "NtClose");
     if (NtClose == NULL)
     {
         return FALSE;
@@ -138,8 +139,8 @@ static BOOL init_undocumented()
  *
  * Returns TRUE on success, FALSE otherwise
  */
-static BOOL find_usbpcap_filters(struct list *list,
-                                 void (*callback)(struct list *list,
+static BOOL find_usbpcap_filters(struct list* list,
+                                 void (*callback)(struct list* list,
                                                   PUNICODE_STRING str))
 {
     UNICODE_STRING str;
@@ -151,8 +152,8 @@ static BOOL find_usbpcap_filters(struct list *list,
     POBJDIR_INFORMATION info;
     PWSTR path = L"\\Device";
 
-    str.Length = wcslen(path)*2;
-    str.MaximumLength = wcslen(path)*2+2;
+    str.Length = wcslen(path) * 2;
+    str.MaximumLength = wcslen(path) * 2 + 2;
     str.Buffer = path;
 
     InitializeObjectAttributes(&attr,
@@ -164,9 +165,9 @@ static BOOL find_usbpcap_filters(struct list *list,
     index = 0;
     written = 0;
 
-    info = (POBJDIR_INFORMATION) HeapAlloc(GetProcessHeap(),
-                                           0,
-                                           BUFFER_SIZE);
+    info = (POBJDIR_INFORMATION)HeapAlloc(GetProcessHeap(),
+                                          0,
+                                          BUFFER_SIZE);
 
     if (info == NULL)
     {
@@ -202,7 +203,7 @@ static BOOL find_usbpcap_filters(struct list *list,
     while (NtQueryDirectoryObject(handle, info, BUFFER_SIZE,
                                   TRUE, FALSE, &index, &written) == 0)
     {
-        const wchar_t *prefix = L"USBPcap";
+        const wchar_t* prefix = L"USBPcap";
         size_t prefix_chars = 7U;
 
         if (wcsncmp(prefix, info->ObjectName.Buffer, prefix_chars) == 0)
@@ -217,7 +218,7 @@ static BOOL find_usbpcap_filters(struct list *list,
     return TRUE;
 }
 
-static void list_insert(struct list *list, struct list_entry *entry)
+static void list_insert(struct list* list, struct list_entry* entry)
 {
     if (list->head == NULL)
     {
@@ -233,10 +234,10 @@ static void list_insert(struct list *list, struct list_entry *entry)
     }
 }
 
-static void list_free(struct list *list, BOOL free_data)
+static void list_free(struct list* list, BOOL free_data)
 {
-    struct list_entry *entry;
-    struct list_entry *next;
+    struct list_entry* entry;
+    struct list_entry* next;
 
     entry = list->head;
     while (entry != NULL)
@@ -255,15 +256,15 @@ static void list_free(struct list *list, BOOL free_data)
     list->count = 0;
 }
 
-static void add_to_list(struct list *list,
+static void add_to_list(struct list* list,
                         PUNICODE_STRING str)
 {
-    char *device;
-    const char *prefix = "\\\\.\\";
+    char* device;
+    const char* prefix = "\\\\.\\";
     int prefix_len = 4;
     int i;
     int len;
-    struct list_entry *entry;
+    struct list_entry* entry;
 
     len = str->Length / sizeof(WCHAR);
     device = malloc(len + 1 + prefix_len);
@@ -275,9 +276,9 @@ static void add_to_list(struct list *list,
 
     for (i = 0; i < len; i++)
     {
-        device[i+prefix_len] = (char)str->Buffer[i];
+        device[i + prefix_len] = (char)str->Buffer[i];
     }
-    device[prefix_len+len] = '\0';
+    device[prefix_len + len] = '\0';
 
     entry = malloc(sizeof(struct list_entry));
     entry->device = device;
@@ -289,7 +290,7 @@ static void add_to_list(struct list *list,
 void filters_initialize()
 {
     struct list list;
-    struct list_entry *entry;
+    struct list_entry* entry;
     int i;
 
     list.head = NULL;

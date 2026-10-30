@@ -14,7 +14,7 @@
 #define USBPCAP_MAIN_H
 
 #ifndef _PREFAST_
-#pragma warning(disable:4068)
+#pragma warning(disable : 4068)
 #endif
 
 ////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@
  * POOL_FLAG_UNINITIALIZED keeps the previous uninitialized-memory contract.
  */
 #if defined(NTDDI_WIN10_VB) && (NTDDI_VERSION >= NTDDI_WIN10_VB)
-#define USBPcapAllocateNonPaged(NumberOfBytes, Tag) \
+#define USBPcapAllocateNonPaged(NumberOfBytes, Tag)                \
     ExAllocatePool2(POOL_FLAG_NON_PAGED | POOL_FLAG_UNINITIALIZED, \
                     (SIZE_T)(NumberOfBytes), (ULONG)(Tag))
 #else
@@ -41,78 +41,79 @@
     ExAllocatePoolWithTag(NonPagedPool, (NumberOfBytes), (Tag))
 #endif
 
-#define DKPORT_DEVNAME_STR  L"\\Device\\DkSysPort" // Device name string
-#define DKPORT_DEVLINK_STR  L"\\DosDevices\\Global\\DkSysPort" // Link name string
-#define DKPORT_MTAG         (ULONG)'dk3A' // To tag memory allocation if any
+#define DKPORT_DEVNAME_STR L"\\Device\\DkSysPort"             // Device name string
+#define DKPORT_DEVLINK_STR L"\\DosDevices\\Global\\DkSysPort" // Link name string
+#define DKPORT_MTAG (ULONG)'dk3A'                             // To tag memory allocation if any
 
 #include "USBPcapQueue.h"
 #include "include\USBPcap.h"
 
-#define USBPCAP_DEFAULT_SNAP_LEN  65535
+#define USBPCAP_DEFAULT_SNAP_LEN 65535
 
 typedef struct _USBPCAP_ROOTHUB_DATA
 {
     /* Circular-Buffer related variables */
-    KSPIN_LOCK             bufferLock;
-    PVOID                  buffer;
-    UINT32                 bufferSize;
-    UINT32                 readOffset;
-    UINT32                 writeOffset;
+    KSPIN_LOCK bufferLock;
+    PVOID buffer;
+    UINT32 bufferSize;
+    UINT32 readOffset;
+    UINT32 writeOffset;
 
     /* Snapshot length */
-    UINT32                 snaplen;
+    UINT32 snaplen;
 
     /* Address filter. See include\USBPcap.h for more information. */
     USBPCAP_ADDRESS_FILTER filter;
 
     /* Reference count. To be used only with InterlockedXXX calls. */
-    volatile LONG          refCount;
+    volatile LONG refCount;
 
-    USHORT                 busId; /* bus number */
-    PDEVICE_OBJECT         controlDevice;
+    USHORT busId; /* bus number */
+    PDEVICE_OBJECT controlDevice;
 } USBPCAP_ROOTHUB_DATA, *PUSBPCAP_ROOTHUB_DATA;
 
 typedef struct _DEVICE_DATA
 {
     /* pParentFlt and pNextParentFlt are NULL for RootHub */
-    PDEVICE_OBJECT         pParentFlt;     /* Parent filter object */
-    PDEVICE_OBJECT         pNextParentFlt; /* Lower object of Parent filter */
+    PDEVICE_OBJECT pParentFlt;     /* Parent filter object */
+    PDEVICE_OBJECT pNextParentFlt; /* Lower object of Parent filter */
 
     /* Previous children. Used when receive IRP_MN_QUERY_DEVICE_RELATIONS */
-    PDEVICE_OBJECT         *previousChildren;
+    PDEVICE_OBJECT* previousChildren;
 
     /* TRUE if the parentPort, isHub and deviceAddress are correct */
-    BOOLEAN                properData;
+    BOOLEAN properData;
 
     /* Parent port number the device is attached to */
-    ULONG                  parentPort;
-    BOOLEAN                isHub; /* TRUE if device is hub */
+    ULONG parentPort;
+    BOOLEAN isHub; /* TRUE if device is hub */
 
-    USHORT                 deviceAddress;
+    USHORT deviceAddress;
 
-    KSPIN_LOCK             tablesSpinLock;
-    PRTL_GENERIC_TABLE     endpointTable;
-    PRTL_GENERIC_TABLE     URBIrpTable;
+    KSPIN_LOCK tablesSpinLock;
+    PRTL_GENERIC_TABLE endpointTable;
+    PRTL_GENERIC_TABLE URBIrpTable;
 
-    PUSBPCAP_ROOTHUB_DATA  pRootData;
+    PUSBPCAP_ROOTHUB_DATA pRootData;
 
     /* Active configuration descriptor */
-    PUSB_CONFIGURATION_DESCRIPTOR  descriptor;
+    PUSB_CONFIGURATION_DESCRIPTOR descriptor;
 } USBPCAP_DEVICE_DATA, *PUSBPCAP_DEVICE_DATA;
 
-#define USBPCAP_MAGIC_CONTROL  0xBAD51571
-#define USBPCAP_MAGIC_ROOTHUB  0xBAD51572
-#define USBPCAP_MAGIC_DEVICE   0xBAD51573
+#define USBPCAP_MAGIC_CONTROL 0xBAD51571
+#define USBPCAP_MAGIC_ROOTHUB 0xBAD51572
+#define USBPCAP_MAGIC_DEVICE 0xBAD51573
 
 ////////////////////////////////////////////////////////////
 // Device extension structure for this object
 //
-typedef struct DEVICE_EXTENSION_Tag {
-    UINT32          deviceMagic;      /* determines device type */
-    PDEVICE_OBJECT  pThisDevObj;      /* This device object pointer */
-    PDEVICE_OBJECT  pNextDevObj;      /* Lower object of this object */
-    PDRIVER_OBJECT  pDrvObj;          /* Driver object pointer */
-    IO_REMOVE_LOCK  removeLock;       /* Remove lock for this object */
+typedef struct DEVICE_EXTENSION_Tag
+{
+    UINT32 deviceMagic;               /* determines device type */
+    PDEVICE_OBJECT pThisDevObj;       /* This device object pointer */
+    PDEVICE_OBJECT pNextDevObj;       /* Lower object of this object */
+    PDRIVER_OBJECT pDrvObj;           /* Driver object pointer */
+    IO_REMOVE_LOCK removeLock;        /* Remove lock for this object */
     PIO_REMOVE_LOCK parentRemoveLock; /* Pointer to parent remove lock */
 
     union
@@ -120,9 +121,9 @@ typedef struct DEVICE_EXTENSION_Tag {
         /* For USBPCAP_MAGIC_CONTROL */
         struct
         {
-            USHORT          id;
-            BOOLEAN         removing;        /* TRUE once delete has started */
-            PDEVICE_OBJECT  pRootHubObject;  /* Root Hub object */
+            USHORT id;
+            BOOLEAN removing;              /* TRUE once delete has started */
+            PDEVICE_OBJECT pRootHubObject; /* Root Hub object */
 
             /* Pointer to handle that can control capture and read the data.
              * Only one such handle is allowed at a time.
@@ -133,17 +134,17 @@ typedef struct DEVICE_EXTENSION_Tag {
              * permission.
              * This can be accessed only via InterlockedCompareExchangePointer().
              */
-            PFILE_OBJECT    pCaptureObject;
+            PFILE_OBJECT pCaptureObject;
 
-            LIST_ENTRY      lePendIrp;       // Used by I/O Cancel-Safe
-            IO_CSQ          ioCsq;           // I/O Cancel-Safe object
-            KSPIN_LOCK      csqSpinLock;     // Spin lock object for I/O Cancel-Safe
+            LIST_ENTRY lePendIrp;   // Used by I/O Cancel-Safe
+            IO_CSQ ioCsq;           // I/O Cancel-Safe object
+            KSPIN_LOCK csqSpinLock; // Spin lock object for I/O Cancel-Safe
         } control;
 
         /* For USBPCAP_MAGIC_ROOTHUB or USBPCAP_MAGIC_DEVICE */
         struct
         {
-            PUSBPCAP_DEVICE_DATA   pDeviceData; /* Device data */
+            PUSBPCAP_DEVICE_DATA pDeviceData; /* Device data */
         } usb;
     } context;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
@@ -152,19 +153,19 @@ typedef struct DEVICE_EXTENSION_Tag {
 ////////////////////////////////////////////////////////////
 // These are "must have" routines for this driver
 //
-DRIVER_INITIALIZE  DriverEntry;
-DRIVER_UNLOAD      DkUnload;
-DRIVER_ADD_DEVICE  AddDevice;
+DRIVER_INITIALIZE DriverEntry;
+DRIVER_UNLOAD DkUnload;
+DRIVER_ADD_DEVICE AddDevice;
 
 ////////////////////////////////////////////////////////////
 // Some "standard" dispatch routines, used by this driver
 //
 __drv_dispatchType(IRP_MJ_CREATE)
-__drv_dispatchType(IRP_MJ_CLEANUP)
-__drv_dispatchType(IRP_MJ_CLOSE) DRIVER_DISPATCH DkCreateClose;
+    __drv_dispatchType(IRP_MJ_CLEANUP)
+        __drv_dispatchType(IRP_MJ_CLOSE) DRIVER_DISPATCH DkCreateClose;
 
 __drv_dispatchType(IRP_MJ_READ)
-__drv_dispatchType(IRP_MJ_WRITE) DRIVER_DISPATCH DkReadWrite;
+    __drv_dispatchType(IRP_MJ_WRITE) DRIVER_DISPATCH DkReadWrite;
 
 __drv_dispatchType(IRP_MJ_DEVICE_CONTROL) DRIVER_DISPATCH DkDevCtl;
 
@@ -193,8 +194,8 @@ VOID DkCompleteRequest(PIRP pIrp, NTSTATUS resStat, UINT_PTR uiInfo);
 ///////////////////////////////////////////////////////////////////////////
 // Macro to show some "debugging messages" to a debugging tool
 //
-#define DkDbgStr(a)    KdPrint(("USBPcap, %s(): %s\n", __FUNCTION__, a))
-#define DkDbgVal(a, b) KdPrint(("USBPcap, %s(): %s ("#b" = 0x%X)\n", __FUNCTION__, a, b))
+#define DkDbgStr(a) KdPrint(("USBPcap, %s(): %s\n", __FUNCTION__, a))
+#define DkDbgVal(a, b) KdPrint(("USBPcap, %s(): %s (" #b " = 0x%X)\n", __FUNCTION__, a, b))
 
 
 ///////////////////////////////////////////////////////////////////////////

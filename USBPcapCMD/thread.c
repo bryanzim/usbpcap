@@ -13,7 +13,7 @@
 #include "iocontrol.h"
 #include "descriptors.h"
 
-HANDLE create_filter_read_handle(struct thread_data *data)
+HANDLE create_filter_read_handle(struct thread_data* data)
 {
     HANDLE filter_handle = INVALID_HANDLE_VALUE;
     char* inBuf = NULL;
@@ -26,7 +26,7 @@ HANDLE create_filter_read_handle(struct thread_data *data)
     }
 
     filter_handle = CreateFileA(data->device,
-                                GENERIC_READ|GENERIC_WRITE,
+                                GENERIC_READ | GENERIC_WRITE,
                                 0,
                                 0,
                                 OPEN_EXISTING,
@@ -86,7 +86,7 @@ HANDLE create_filter_read_handle(struct thread_data *data)
     {
         fprintf(stderr, "DeviceIoControl failed with %d status (supplimentary code %d)\n",
                 GetLastError(),
-               bytes_ret);
+                bytes_ret);
         goto finish;
     }
 
@@ -108,7 +108,7 @@ finish:
 }
 
 static void write_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
-                       void *buffer, DWORD bytes)
+                       void* buffer, DWORD bytes)
 {
     /* Write data to the end of the file. */
     write_overlapped->Offset = 0xFFFFFFFF;
@@ -141,7 +141,7 @@ static void write_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
 }
 
 static void process_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
-                         unsigned char *buffer, DWORD bytes)
+                         unsigned char* buffer, DWORD bytes)
 {
     if (data->descriptors.buf_written < sizeof(pcap_hdr_t))
     {
@@ -155,7 +155,7 @@ static void process_data(struct thread_data* data, LPOVERLAPPED write_overlapped
 
         if (data->descriptors.buf_written == sizeof(pcap_hdr_t))
         {
-            pcap_hdr_t *hdr = (pcap_hdr_t *)data->descriptors.buf;
+            pcap_hdr_t* hdr = (pcap_hdr_t*)data->descriptors.buf;
             write_data(data, write_overlapped, data->descriptors.buf, sizeof(pcap_hdr_t));
             if ((hdr->magic_number == 0xA1B2C3D4) && (hdr->network == DLT_USBPCAP) && (data->descriptors.descriptors_len > 0))
             {

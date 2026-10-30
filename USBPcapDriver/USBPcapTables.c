@@ -11,16 +11,16 @@
 
 typedef struct _USBPCAP_INTERNAL_ENDPOINT_INFO
 {
-    RTL_SPLAY_LINKS        links;
-    LIST_ENTRY             entry;
-    USBPCAP_ENDPOINT_INFO  info;
+    RTL_SPLAY_LINKS links;
+    LIST_ENTRY entry;
+    USBPCAP_ENDPOINT_INFO info;
 } USBPCAP_INTERNAL_ENDPOINT_INFO, *PUSBPCAP_INTERNAL_ENDPOINT_INFO;
 
 VOID USBPcapRemoveEndpointInfo(IN PRTL_GENERIC_TABLE table,
                                IN USBD_PIPE_HANDLE handle)
 {
-    USBPCAP_INTERNAL_ENDPOINT_INFO  info;
-    BOOLEAN                         deleted;
+    USBPCAP_INTERNAL_ENDPOINT_INFO info;
+    BOOLEAN deleted;
 
     info.info.handle = handle;
 
@@ -40,26 +40,26 @@ VOID USBPcapAddEndpointInfo(IN PRTL_GENERIC_TABLE table,
                             IN PUSBD_PIPE_INFORMATION pipeInfo,
                             IN USHORT deviceAddress)
 {
-    USBPCAP_INTERNAL_ENDPOINT_INFO  info;
-    BOOLEAN                         new;
+    USBPCAP_INTERNAL_ENDPOINT_INFO info;
+    BOOLEAN new;
     PUSBPCAP_INTERNAL_ENDPOINT_INFO pInfo;
 
-    info.info.handle          = pipeInfo->PipeHandle;
-    info.info.type            = pipeInfo->PipeType;
+    info.info.handle = pipeInfo->PipeHandle;
+    info.info.type = pipeInfo->PipeType;
     info.info.endpointAddress = pipeInfo->EndpointAddress;
-    info.info.deviceAddress   = deviceAddress;
+    info.info.deviceAddress = deviceAddress;
 
     pInfo = RtlInsertElementGenericTable(table,
-                                 (PVOID)&info,
-                                 sizeof(USBPCAP_INTERNAL_ENDPOINT_INFO),
-                                 &new);
+                                         (PVOID)&info,
+                                         sizeof(USBPCAP_INTERNAL_ENDPOINT_INFO),
+                                         &new);
 
     if ((new == FALSE) && (pInfo != NULL))
     {
         DkDbgStr("Element already exists in table, updating entry");
-        pInfo->info.type            = pipeInfo->PipeType;
+        pInfo->info.type = pipeInfo->PipeType;
         pInfo->info.endpointAddress = pipeInfo->EndpointAddress;
-        pInfo->info.deviceAddress   = deviceAddress;
+        pInfo->info.deviceAddress = deviceAddress;
     }
 }
 
@@ -72,7 +72,7 @@ PUSBPCAP_ENDPOINT_INFO USBPcapGetEndpointInfo(IN PRTL_GENERIC_TABLE table,
                                               IN USBD_PIPE_HANDLE handle)
 {
     PUSBPCAP_INTERNAL_ENDPOINT_INFO pInfo;
-    USBPCAP_INTERNAL_ENDPOINT_INFO  info;
+    USBPCAP_INTERNAL_ENDPOINT_INFO info;
 
     info.info.handle = handle;
 
@@ -100,8 +100,8 @@ USBPcapAllocateRoutine(IN PRTL_GENERIC_TABLE table,
                        IN CLONG size)
 {
     return USBPcapAllocateNonPaged(
-                                 size,
-                                 USBPCAP_TABLE_TAG);
+        size,
+        USBPCAP_TABLE_TAG);
 }
 
 RTL_GENERIC_COMPARE_ROUTINE USBPcapCompareEndpointInfo;
@@ -156,9 +156,9 @@ PRTL_GENERIC_TABLE USBPcapInitializeEndpointTable(IN PVOID context)
     DkDbgStr("Initialize endpoint table");
 
     table = (PRTL_GENERIC_TABLE)
-                USBPcapAllocateNonPaged(
-                                      sizeof(RTL_GENERIC_TABLE),
-                                      USBPCAP_TABLE_TAG);
+        USBPcapAllocateNonPaged(
+            sizeof(RTL_GENERIC_TABLE),
+            USBPCAP_TABLE_TAG);
 
     if (table == NULL)
     {
@@ -210,16 +210,16 @@ BOOLEAN USBPcapRetrieveEndpointInfo(IN PUSBPCAP_DEVICE_DATA pDeviceData,
 
 typedef struct _USBPCAP_INTERNAL_URB_IRP_INFO
 {
-    RTL_SPLAY_LINKS        links;
-    LIST_ENTRY             entry;
-    USBPCAP_URB_IRP_INFO   info;
+    RTL_SPLAY_LINKS links;
+    LIST_ENTRY entry;
+    USBPCAP_URB_IRP_INFO info;
 } USBPCAP_INTERNAL_URB_IRP_INFO, *PUSBPCAP_INTERNAL_URB_IRP_INFO;
 
 VOID USBPcapRemoveURBIRPInfo(IN PRTL_GENERIC_TABLE table,
                              IN PIRP irp)
 {
-    USBPCAP_INTERNAL_URB_IRP_INFO   info;
-    BOOLEAN                         deleted;
+    USBPCAP_INTERNAL_URB_IRP_INFO info;
+    BOOLEAN deleted;
 
     info.info.irp = irp;
 
@@ -234,8 +234,8 @@ VOID USBPcapRemoveURBIRPInfo(IN PRTL_GENERIC_TABLE table,
 VOID USBPcapAddURBIRPInfo(IN PRTL_GENERIC_TABLE table,
                           IN PUSBPCAP_URB_IRP_INFO irpinfo)
 {
-    USBPCAP_INTERNAL_URB_IRP_INFO   info;
-    BOOLEAN                         new;
+    USBPCAP_INTERNAL_URB_IRP_INFO info;
+    BOOLEAN new;
 
     info.info = *irpinfo;
 
@@ -254,8 +254,8 @@ static PUSBPCAP_URB_IRP_INFO
 USBPcapGetURBIRPInfo(IN PRTL_GENERIC_TABLE table,
                      IN PIRP irp)
 {
-    PUSBPCAP_INTERNAL_URB_IRP_INFO  pInfo;
-    USBPCAP_INTERNAL_URB_IRP_INFO   info;
+    PUSBPCAP_INTERNAL_URB_IRP_INFO pInfo;
+    USBPCAP_INTERNAL_URB_IRP_INFO info;
 
     info.info.irp = irp;
 
@@ -315,9 +315,9 @@ PRTL_GENERIC_TABLE USBPcapInitializeURBIRPInfoTable(IN PVOID context)
     DkDbgStr("Initialize URB irp table");
 
     table = (PRTL_GENERIC_TABLE)
-                USBPcapAllocateNonPaged(
-                                      sizeof(RTL_GENERIC_TABLE),
-                                      USBPCAP_TABLE_TAG);
+        USBPcapAllocateNonPaged(
+            sizeof(RTL_GENERIC_TABLE),
+            USBPCAP_TABLE_TAG);
 
     if (table == NULL)
     {

@@ -10,7 +10,7 @@
 #include "USBPcapMain.h"
 
 NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
-                                   OUT PDEVICE_OBJECT *pdo);
+                                   OUT PDEVICE_OBJECT* pdo);
 
 NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
                                  PULONG numberOfPorts);
@@ -18,7 +18,9 @@ NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
 #if DBG
 NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub);
 #else
-#define USBPcapPrintUSBPChildrenInformation(hub) {}
+#define USBPcapPrintUSBPChildrenInformation(hub) \
+    {                                            \
+    }
 #endif
 
 NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt);
@@ -34,14 +36,14 @@ BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address);
 LARGE_INTEGER USBPcapGetCurrentTimestamp(VOID);
 
 #ifdef ALLOC_PRAGMA
-#pragma alloc_text (PAGE, USBPcapGetTargetDevicePdo)
-#pragma alloc_text (PAGE, USBPcapGetNumberOfPorts)
+#pragma alloc_text(PAGE, USBPcapGetTargetDevicePdo)
+#pragma alloc_text(PAGE, USBPcapGetNumberOfPorts)
 #if DBG
-#pragma alloc_text (PAGE, USBPcapPrintUSBPChildrenInformation)
+#pragma alloc_text(PAGE, USBPcapPrintUSBPChildrenInformation)
 #endif
-#pragma alloc_text (PAGE, USBPcapGetDeviceUSBInfo)
-#pragma alloc_text (PAGE, USBPcapIsDeviceRootHub)
-#pragma alloc_text (PAGE, USBPcapGetHubInterfaces)
+#pragma alloc_text(PAGE, USBPcapGetDeviceUSBInfo)
+#pragma alloc_text(PAGE, USBPcapIsDeviceRootHub)
+#pragma alloc_text(PAGE, USBPcapGetHubInterfaces)
 #endif
 
 #endif /* USBPCAP_HELPER_FUNCTIONS_H */

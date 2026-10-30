@@ -11,32 +11,31 @@
 
 extern volatile LONG g_controlId;
 
-#define NTNAME_PREFIX      L"\\Device\\USBPcap"
-#define SYMBOLIC_PREFIX    L"\\DosDevices\\USBPcap"
-#define MAX_CONTROL_ID     L"65535"
+#define NTNAME_PREFIX L"\\Device\\USBPcap"
+#define SYMBOLIC_PREFIX L"\\DosDevices\\USBPcap"
+#define MAX_CONTROL_ID L"65535"
 
-#define MAX_NTNAME_LEN     (sizeof(NTNAME_PREFIX)+sizeof(MAX_CONTROL_ID))
-#define MAX_SYMBOLIC_LEN   (sizeof(SYMBOLIC_PREFIX)+sizeof(MAX_CONTROL_ID))
+#define MAX_NTNAME_LEN (sizeof(NTNAME_PREFIX) + sizeof(MAX_CONTROL_ID))
+#define MAX_SYMBOLIC_LEN (sizeof(SYMBOLIC_PREFIX) + sizeof(MAX_CONTROL_ID))
 
 DECLARE_CONST_UNICODE_STRING(
     SDDL_DEVOBJ_SYS_ALL_ADM_ALL_EVERYONE_ANY,
-    L"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GX;;;WD)(A;;GX;;;RC)"
-);
+    L"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GX;;;WD)(A;;GX;;;RC)");
 
 __drv_requiresIRQL(PASSIVE_LEVEL)
-NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
-                                           OUT PDEVICE_OBJECT *control,
-                                           OUT USHORT *busId)
+    NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
+                                               OUT PDEVICE_OBJECT* control,
+                                               OUT USHORT* busId)
 {
-    UNICODE_STRING     ntDeviceName;
-    UNICODE_STRING     symbolicLinkName;
-    PDEVICE_OBJECT     controlDevice = NULL;
-    PDEVICE_EXTENSION  controlExt = NULL;
-    NTSTATUS           status;
-    USHORT             id;
-    LONG               newId;
-    WCHAR              ntNameBuffer[MAX_NTNAME_LEN / sizeof(WCHAR)];
-    WCHAR              symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
+    UNICODE_STRING ntDeviceName;
+    UNICODE_STRING symbolicLinkName;
+    PDEVICE_OBJECT controlDevice = NULL;
+    PDEVICE_EXTENSION controlExt = NULL;
+    NTSTATUS status;
+    USHORT id;
+    LONG newId;
+    WCHAR ntNameBuffer[MAX_NTNAME_LEN / sizeof(WCHAR)];
+    WCHAR symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
 
     ASSERT(hubExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB);
 
@@ -71,7 +70,7 @@ NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
     }
 
     KdPrint(("Creating device %wZ (%wZ)\n",
-            &ntDeviceName, &symbolicLinkName));
+             &ntDeviceName, &symbolicLinkName));
 
     status = IoCreateDeviceSecure(hubExt->pDrvObj,
                                   sizeof(DEVICE_EXTENSION),
@@ -97,17 +96,17 @@ NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
         }
 
         controlExt = (PDEVICE_EXTENSION)controlDevice->DeviceExtension;
-        controlExt->deviceMagic      = USBPCAP_MAGIC_CONTROL;
-        controlExt->pThisDevObj      = controlDevice;
-        controlExt->pNextDevObj      = NULL;
-        controlExt->pDrvObj          = hubExt->pDrvObj;
+        controlExt->deviceMagic = USBPCAP_MAGIC_CONTROL;
+        controlExt->pThisDevObj = controlDevice;
+        controlExt->pNextDevObj = NULL;
+        controlExt->pDrvObj = hubExt->pDrvObj;
 
         IoInitializeRemoveLock(&controlExt->removeLock, 0, 0, 0);
         controlExt->parentRemoveLock = &hubExt->removeLock;
 
         /* Initialize USBPcap control context */
-        controlExt->context.control.id             = id;
-        controlExt->context.control.removing       = FALSE;
+        controlExt->context.control.id = id;
+        controlExt->context.control.removing = FALSE;
         controlExt->context.control.pRootHubObject = hubExt->pThisDevObj;
         controlExt->context.control.pCaptureObject = NULL;
 
@@ -153,16 +152,16 @@ End:
 
 VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice)
 {
-    UNICODE_STRING         symbolicLinkName;
-    WCHAR                  symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
-    USHORT                 id;
-    PDEVICE_EXTENSION      pDevExt;
-    PDEVICE_EXTENSION      rootExt;
-    PUSBPCAP_ROOTHUB_DATA  pRootData;
-    LIST_ENTRY             drained;
-    PIRP                   pending;
-    KIRQL                  irql;
-    NTSTATUS               status;
+    UNICODE_STRING symbolicLinkName;
+    WCHAR symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];
+    USHORT id;
+    PDEVICE_EXTENSION pDevExt;
+    PDEVICE_EXTENSION rootExt;
+    PUSBPCAP_ROOTHUB_DATA pRootData;
+    LIST_ENTRY drained;
+    PIRP pending;
+    KIRQL irql;
+    NTSTATUS status;
 
     pDevExt = ((PDEVICE_EXTENSION)controlDevice->DeviceExtension);
 
@@ -241,4 +240,3 @@ VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice)
         pDevExt->context.control.pRootHubObject = NULL;
     }
 }
-

@@ -1,0 +1,70 @@
+﻿# Visual Studio generated .clang-format file
+
+# The style options in this file are a best effort attempt to replicate the
+# current IDE formatting configuration from Tools > Options. The following
+# style options, however, should be verified:
+# AfterClass, AfterControlStatement, AfterEnum, AfterFunction, AfterNamespace, 
+# AfterStruct, AfterUnion
+
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Right
+AlignOperands: true
+AllowShortBlocksOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+BasedOnStyle: LLVM
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true 
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+BreakBeforeBraces: Custom
+ColumnLimit: 0
+Cpp11BracedListStyle: false
+FixNamespaceComments: false
+IndentCaseLabels: false
+IndentPPDirectives: None
+IndentWidth: 4
+MaxEmptyLinesToKeep: 10
+NamespaceIndentation: All
+PointerAlignment: Left
+# Windows and kernel headers are order-sensitive (initguid.h, ntddk.h).
+SortIncludes: Never
+IncludeBlocks: Regroup
+IncludeCategories:
+  # C and C++ standard headers. First match wins, so this stays ahead of the angle-bracket catch-all.
+  - Regex: '^<(algorithm|any|array|atomic|barrier|bit|bitset|charconv|chrono|codecvt|compare|complex|concepts|condition_variable|coroutine|debugging|deque|exception|execution|expected|filesystem|flat_map|flat_set|format|forward_list|fstream|functional|future|generator|hazard_pointer|initializer_list|inplace_vector|iomanip|ios|iosfwd|iostream|istream|iterator|latch|limits|linalg|list|locale|map|mdspan|memory|memory_resource|mutex|new|numbers|numeric|optional|ostream|print|queue|random|ranges|ratio|rcu|regex|scoped_allocator|semaphore|set|shared_mutex|source_location|span|spanstream|sstream|stack|stacktrace|stdexcept|stdfloat|stop_token|streambuf|string|string_view|strstream|syncstream|system_error|text_encoding|thread|tuple|type_traits|typeindex|typeinfo|unordered_map|unordered_set|utility|valarray|variant|vector|version|assert\.h|complex\.h|ctype\.h|errno\.h|fenv\.h|float\.h|inttypes\.h|iso646\.h|limits\.h|locale\.h|math\.h|setjmp\.h|signal\.h|stdalign\.h|stdarg\.h|stdatomic\.h|stdbool\.h|stdckdint\.h|stddef\.h|stdint\.h|stdio\.h|stdlib\.h|stdnoreturn\.h|string\.h|tgmath\.h|threads\.h|time\.h|uchar\.h|wchar\.h|wctype\.h|cctype|cerrno|cfenv|cfloat|cinttypes|climits|clocale|cmath|csetjmp|csignal|cstdalign|cstdarg|cstdbool|cstddef|cstdint|cstdio|cstdlib|cstring|ctgmath|ctime|cuchar|cwchar|cwctype)>$'
+    Priority: 4
+    CaseSensitive: true
+  # OS headers.
+  - Regex: '^<([Ww]indows\.h|[Ww]in[Ss]ock2\.h|[Ww]in[Ss]ock\.h|ws2tcpip\.h|[Oo]bjbase\.h|[Ss]hlwapi\.h|[Ss]hlobj\.h|shellapi\.h|processthreadsapi\.h|synchapi\.h|fileapi\.h|handleapi\.h|errhandlingapi\.h|sysinfoapi\.h|timezoneapi\.h|wincrypt\.h|iphlpapi\.h|mstcpip\.h|mswsock\.h|mmsystem\.h|timeapi\.h|winioctl\.h|winbase\.h|winuser\.h|wingdi\.h|winnt\.h|winsvc\.h|tlhelp32\.h|psapi\.h|dbghelp\.h|direct\.h|fcntl\.h|io\.h|process\.h|pthread\.h|unistd\.h|netdb\.h|arpa/.+|linux/.+|net/.+|netinet/.+|sys/.+)>$'
+    Priority: 3
+    CaseSensitive: true
+  # External libraries.
+  - Regex: '^<'
+    Priority: 2
+    CaseSensitive: true
+  # Other project headers. The associated header is category 0 and stays first.
+  - Regex: '^"'
+    Priority: 1
+    CaseSensitive: true
+SortUsingDeclarations: false
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+TabWidth: 4
+UseTab: false
