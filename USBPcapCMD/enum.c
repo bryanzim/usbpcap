@@ -49,7 +49,8 @@ typedef void (*EnumDeviceInfoCallback)(ULONG level, ULONG port, TCHAR display[MA
  */
 #define LOOP_SANITY_LIMIT 10000
 
-void wide_print(LPCWSTR string) {
+void wide_print(LPCWSTR string)
+{
     HANDLE std_out;
     BOOL console_output;
     DWORD type;
@@ -113,7 +114,7 @@ void wide_print(LPCWSTR string) {
         DWORD written;
 
         fflush(stdout);
-        nchars = (DWORD) wcslen(string);
+        nchars = (DWORD)wcslen(string);
         WriteConsoleW(std_out,
                       (PVOID)string,
                       nchars,
@@ -132,7 +133,7 @@ static void EnumerateHub(PTSTR hub,
                          PUSB_NODE_CONNECTION_INFORMATION connection_info,
                          ULONG level,
                          EnumDeviceInfoCallback callback,
-                         EnumConnectedPortCallback port_callback, void *port_ctx);
+                         EnumConnectedPortCallback port_callback, void* port_ctx);
 
 static void print_indent(ULONG level)
 {
@@ -288,11 +289,11 @@ void print_extcap_config(ULONG level, ULONG port, TCHAR display[MAX_DEVICE_ID_LE
 
 static PTSTR GetDriverKeyName(HANDLE Hub, ULONG ConnectionIndex)
 {
-    BOOL                                success;
-    ULONG                               nBytes;
-    USB_NODE_CONNECTION_DRIVERKEY_NAME  driverKeyName;
+    BOOL success;
+    ULONG nBytes;
+    USB_NODE_CONNECTION_DRIVERKEY_NAME driverKeyName;
     PUSB_NODE_CONNECTION_DRIVERKEY_NAME driverKeyNameW;
-    PTSTR                               driverKeyNameA;
+    PTSTR driverKeyNameA;
 
     driverKeyNameW = NULL;
     driverKeyNameA = NULL;
@@ -374,11 +375,11 @@ GetDriverKeyNameError:
 
 static PTSTR GetExternalHubName(HANDLE Hub, ULONG ConnectionIndex)
 {
-    BOOL                        success;
-    ULONG                       nBytes;
-    USB_NODE_CONNECTION_NAME    extHubName;
-    PUSB_NODE_CONNECTION_NAME   extHubNameW;
-    PTSTR                       extHubNameA;
+    BOOL success;
+    ULONG nBytes;
+    USB_NODE_CONNECTION_NAME extHubName;
+    PUSB_NODE_CONNECTION_NAME extHubNameW;
+    PTSTR extHubNameA;
 
     extHubNameW = NULL;
     extHubNameA = NULL;
@@ -460,14 +461,14 @@ GetExternalHubNameError:
 typedef struct _Stack
 {
     USHORT value;
-    struct _Stack *next;
+    struct _Stack* next;
 } Stack;
 
 /**
  *  Pops value from stack.
  *  Returns TRUE on success, FALSE otherwise.
  */
-static BOOL stack_pop(Stack **stack, USHORT *ret_val)
+static BOOL stack_pop(Stack** stack, USHORT* ret_val)
 {
     if (*stack == NULL)
     {
@@ -475,7 +476,7 @@ static BOOL stack_pop(Stack **stack, USHORT *ret_val)
     }
     else
     {
-        Stack *tmp;
+        Stack* tmp;
         tmp = *stack;
         *stack = tmp->next;
 
@@ -489,7 +490,7 @@ static BOOL stack_pop(Stack **stack, USHORT *ret_val)
  *  Peeks value from stack without removing it.
  *  Returns TRUE on success, FALSE otherwise.
  */
-static BOOL stack_peek(Stack **stack, USHORT *ret_val)
+static BOOL stack_peek(Stack** stack, USHORT* ret_val)
 {
     if (*stack == NULL)
     {
@@ -506,9 +507,9 @@ static BOOL stack_peek(Stack **stack, USHORT *ret_val)
  * Pushes value to stack.
  * Return TRUE on success, FALSE otherwise.
  */
-static BOOL stack_push(Stack **stack, USHORT value)
+static BOOL stack_push(Stack** stack, USHORT value)
 {
-    Stack *head = malloc(sizeof(Stack));
+    Stack* head = malloc(sizeof(Stack));
     if (head != NULL)
     {
         head->value = value;
@@ -527,16 +528,16 @@ static BOOL stack_push(Stack **stack, USHORT value)
 static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                                  USHORT deviceAddress, EnumDeviceInfoCallback callback)
 {
-    DEVINST    current;
-    DEVINST    next;
-    CONFIGRET  cr;
-    ULONG      level;
-    ULONG      len;
-    TCHAR      buf[MAX_DEVICE_ID_LEN];
-    USHORT     parentNode = 0U;
-    USHORT     nextNode = 1U;
-    Stack      *nodeStack = NULL;
-    DWORD      sanityCounter = 0U;
+    DEVINST current;
+    DEVINST next;
+    CONFIGRET cr;
+    ULONG level;
+    ULONG len;
+    TCHAR buf[MAX_DEVICE_ID_LEN];
+    USHORT parentNode = 0U;
+    USHORT nextNode = 1U;
+    Stack* nodeStack = NULL;
+    DWORD sanityCounter = 0U;
 
     level = indent;
     current = parent;
@@ -632,7 +633,8 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                 }
                 else
                 {
-                    while (TRUE == stack_pop(&nodeStack, &parentNode));
+                    while (TRUE == stack_pop(&nodeStack, &parentNode))
+                        ;
                     /* Nothing left to do */
                     return;
                 }
@@ -651,16 +653,16 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
                      USHORT deviceAddress, USHORT parentAddress,
                      EnumDeviceInfoCallback callback)
 {
-    DEVINST    devInst;
-    DEVINST    devInstNext;
-    CONFIGRET  cr;
-    ULONG      walkDone = 0U;
-    ULONG      len;
-    TCHAR      buf[MAX_DEVICE_ID_LEN];
+    DEVINST devInst;
+    DEVINST devInstNext;
+    CONFIGRET cr;
+    ULONG walkDone = 0U;
+    ULONG len;
+    TCHAR buf[MAX_DEVICE_ID_LEN];
 
     // Sanity counters to prevent endless loops
-    DWORD      sanityOuter = 0U;
-    DWORD      sanityInner = 0U;
+    DWORD sanityOuter = 0U;
+    DWORD sanityInner = 0U;
 
     // Get Root DevNode
     cr = CM_Locate_DevNode(&devInst, NULL, 0);
@@ -782,20 +784,20 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
 static VOID
 EnumerateHubPorts(HANDLE hHubDevice, UCHAR NumPorts, ULONG level,
                   USHORT hubAddress, EnumDeviceInfoCallback print_callback,
-                  EnumConnectedPortCallback port_callback, void *port_ctx)
+                  EnumConnectedPortCallback port_callback, void* port_ctx)
 {
-    ULONG       index;
-    BOOL        success;
+    ULONG index;
+    BOOL success;
 
     PTSTR driverKeyName;
 
     // Loop over all ports of the hub.
     //
     // Port indices are 1 based, not 0 based.
-    for (index=1; index <= NumPorts; index++)
+    for (index = 1; index <= NumPorts; index++)
     {
-        USB_NODE_CONNECTION_INFORMATION    connectionInfo;
-        ULONG                               nBytes;
+        USB_NODE_CONNECTION_INFORMATION connectionInfo;
+        ULONG nBytes;
 
         connectionInfo.ConnectionIndex = index;
 
@@ -853,7 +855,7 @@ EnumerateHubPorts(HANDLE hHubDevice, UCHAR NumPorts, ULONG level,
                 {
                     EnumerateHub(extHubName,
                                  &connectionInfo,
-                                 level+1,
+                                 level + 1,
                                  print_callback,
                                  port_callback,
                                  port_ctx);
@@ -869,19 +871,19 @@ static void EnumerateHub(PTSTR hub,
                          PUSB_NODE_CONNECTION_INFORMATION connection_info,
                          ULONG level,
                          EnumDeviceInfoCallback print_callback,
-                         EnumConnectedPortCallback port_callback, void *port_ctx)
+                         EnumConnectedPortCallback port_callback, void* port_ctx)
 {
-    PUSB_NODE_INFORMATION   hubInfo;
-    HANDLE                  hHubDevice;
-    PTSTR                   deviceName;
-    size_t                  deviceNameSize;
-    BOOL                    success;
-    ULONG                   nBytes;
+    PUSB_NODE_INFORMATION hubInfo;
+    HANDLE hHubDevice;
+    PTSTR deviceName;
+    size_t deviceNameSize;
+    BOOL success;
+    ULONG nBytes;
 
     // Initialize locals to not allocated state so the error cleanup routine
     // only tries to cleanup things that were successfully allocated.
-    hubInfo     = NULL;
-    hHubDevice  = INVALID_HANDLE_VALUE;
+    hubInfo = NULL;
+    hHubDevice = INVALID_HANDLE_VALUE;
 
     // Allocate some space for a USB_NODE_INFORMATION structure for this Hub
     hubInfo = (PUSB_NODE_INFORMATION)GlobalAlloc(GPTR, sizeof(USB_NODE_INFORMATION));
@@ -986,12 +988,12 @@ EnumerateHubError:
  * @return Number of WCHARs written to outBuf.
  */
 static DWORD
-get_usbpcap_filter_hub_symlink(const char *filter,
-                               WCHAR *outBuf,
+get_usbpcap_filter_hub_symlink(const char* filter,
+                               WCHAR* outBuf,
                                DWORD outBufSize)
 {
     HANDLE filter_handle;
-    DWORD  bytes_ret = 0U;
+    DWORD bytes_ret = 0U;
 
     filter_handle = CreateFileA(filter,
                                 0,
@@ -1023,12 +1025,12 @@ get_usbpcap_filter_hub_symlink(const char *filter,
     return bytes_ret;
 }
 
-void enumerate_print_usbpcap_interactive(const char *filter)
+void enumerate_print_usbpcap_interactive(const char* filter)
 {
-    WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
-    DWORD  bytes_ret;
+    WCHAR outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
+    DWORD bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;
@@ -1043,12 +1045,12 @@ void enumerate_print_usbpcap_interactive(const char *filter)
     }
 }
 
-void enumerate_print_extcap_config(const char *filter)
+void enumerate_print_extcap_config(const char* filter)
 {
-    WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
-    DWORD  bytes_ret;
+    WCHAR outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
+    DWORD bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;
@@ -1059,12 +1061,12 @@ void enumerate_print_extcap_config(const char *filter)
     }
 }
 
-void enumerate_all_connected_devices(const char *filter, EnumConnectedPortCallback cb, void *ctx)
+void enumerate_all_connected_devices(const char* filter, EnumConnectedPortCallback cb, void* ctx)
 {
-    WCHAR  outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
-    DWORD  bytes_ret;
+    WCHAR outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
+    DWORD bytes_ret;
 
-    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf)/sizeof(outBuf[0U]));
+    bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
     if (bytes_ret > 0)
     {
         PTSTR str;

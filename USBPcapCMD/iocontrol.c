@@ -14,7 +14,7 @@
  *
  * Returns TRUE on success (address is within <0; 127>), FALSE otherwise.
  */
-static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8 *range, UINT8 *index)
+static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* index)
 {
     if ((address < 0) || (address > 127))
     {
@@ -103,8 +103,7 @@ BOOLEAN USBPcapInitAddressFilter(PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOO
                 do
                 {
                     list++;
-                }
-                while (isdigit(*list));
+                } while (isdigit(*list));
             }
             else if (*list == ',')
             {

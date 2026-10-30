@@ -24,8 +24,8 @@
 
 #define INPUT_BUFFER_SIZE 1024
 
-#define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024*1024)
-#define DEFAULT_SNAPSHOT_LENGTH             (65535)
+#define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024 * 1024)
+#define DEFAULT_SNAPSHOT_LENGTH (65535)
 
 static BOOL IsElevated()
 {
@@ -120,11 +120,11 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
     {
         if (pszBuffer == NULL && (nMaxChars != 0 || ppszFileName != NULL))
         {
-             dwStatus = ERROR_INVALID_PARAMETER;
+            dwStatus = ERROR_INVALID_PARAMETER;
         }
         else if (pszBuffer != NULL && nMaxChars < 1)
         {
-             dwStatus = ERROR_INVALID_PARAMETER;
+            dwStatus = ERROR_INVALID_PARAMETER;
         }
     }
 
@@ -134,10 +134,10 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
         {
             HANDLE hHeap = GetProcessHeap();
 
-            WCHAR  cwBuffer[2048U] = { 0 };
-            LPWSTR pszBuffer      = cwBuffer;
-            DWORD  dwMaxChars     = _countof(cwBuffer);
-            DWORD  dwLength       = 0U;
+            WCHAR cwBuffer[2048U] = { 0 };
+            LPWSTR pszBuffer = cwBuffer;
+            DWORD dwMaxChars = _countof(cwBuffer);
+            DWORD dwLength = 0U;
 
             LPWSTR pszNew;
             SIZE_T nSize;
@@ -175,7 +175,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
                 dwMaxChars *= 2;
 
                 pszNew = (pszBuffer == cwBuffer ? NULL : pszBuffer);
-                nSize  = (SIZE_T)dwMaxChars * sizeof(WCHAR);
+                nSize = (SIZE_T)dwMaxChars * sizeof(WCHAR);
 
                 if (pszNew == NULL)
                 {
@@ -214,7 +214,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
             {
                 if (!HeapFree(hHeap, 0, pszBuffer))
                 {
-                   dwStatus = GetLastError();
+                    dwStatus = GetLastError();
                 }
             }
         }
@@ -242,9 +242,9 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
                     {
                         *ppszFileName = pszItr + 1;
                     }
-               }
+                }
             }
-         }
+        }
     }
 
     /* Return full name length or 0 on error */
@@ -269,10 +269,10 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
  *
  * \return BOOL TRUE on success, FALSE otherwise.
  */
-static BOOL generate_worker_command_line(struct thread_data *data,
-                                         PWSTR *appPath,
-                                         PWSTR *appCmdLine,
-                                         HANDLE *pcap_handle)
+static BOOL generate_worker_command_line(struct thread_data* data,
+                                         PWSTR* appPath,
+                                         PWSTR* appCmdLine,
+                                         HANDLE* pcap_handle)
 {
     PWSTR exePath;
     int exePathLen;
@@ -284,7 +284,7 @@ static BOOL generate_worker_command_line(struct thread_data *data,
     *pcap_handle = INVALID_HANDLE_VALUE;
 
     exePathLen = GetModuleFullName(NULL, NULL, 0, NULL);
-    exePath = (WCHAR *)malloc(exePathLen * sizeof(WCHAR));
+    exePath = (WCHAR*)malloc(exePathLen * sizeof(WCHAR));
 
     if (exePath == NULL)
     {
@@ -297,7 +297,7 @@ static BOOL generate_worker_command_line(struct thread_data *data,
     if (strncmp(data->filename, "-", 2) == 0)
     {
         /* Need to create pipe */
-        WCHAR *tmp;
+        WCHAR* tmp;
         int nChars = sizeof("\\\\.\\pipe\\") + strlen(data->device) + 1;
         pipeName = malloc((nChars + 1) * sizeof(WCHAR));
         if (pipeName == NULL)
@@ -306,7 +306,7 @@ static BOOL generate_worker_command_line(struct thread_data *data,
             free(exePath);
             return FALSE;
         }
-        swprintf_s(pipeName, nChars,  L"\\\\.\\pipe\\%S", data->device);
+        swprintf_s(pipeName, nChars, L"\\\\.\\pipe\\%S", data->device);
         for (tmp = &pipeName[sizeof("\\\\.\\pipe\\")]; *tmp; tmp++)
         {
             if (*tmp == L'\\')
@@ -341,11 +341,11 @@ static BOOL generate_worker_command_line(struct thread_data *data,
         *pcap_handle = INVALID_HANDLE_VALUE;
     }
 
-#define WORKER_CMD_LINE_FORMATTER             L"-d %S -b %u -o %S"
-#define WORKER_CMD_LINE_FORMATTER_PIPE        L"-d %S -b %u -o %s"
+#define WORKER_CMD_LINE_FORMATTER L"-d %S -b %u -o %S"
+#define WORKER_CMD_LINE_FORMATTER_PIPE L"-d %S -b %u -o %s"
 
-#define WORKER_CMD_LINE_FORMATTER_SNAPLEN     L" -s %u"
-#define WORKER_CMD_LINE_FORMATTER_DEVICES     L" --devices %S"
+#define WORKER_CMD_LINE_FORMATTER_SNAPLEN L" -s %u"
+#define WORKER_CMD_LINE_FORMATTER_DEVICES L" --devices %S"
 #define WORKER_CMD_LINE_FORMATTER_CAPTURE_ALL L" --capture-from-all-devices"
 #define WORKER_CMD_LINE_FORMATTER_CAPTURE_NEW L" --capture-from-new-devices"
 #define WORKER_CMD_LINE_FORMATTER_INJECT_DESCRIPTORS L" --inject-descriptors"
@@ -494,7 +494,7 @@ static HANDLE create_elevated_worker(PWSTR appPath, PWSTR cmdLine)
  *
  *  \return Handle to created process.
  */
-static HANDLE create_breakaway_worker_in_job(struct thread_data *data, PWSTR appPath, PWSTR appCmdLine)
+static HANDLE create_breakaway_worker_in_job(struct thread_data* data, PWSTR appPath, PWSTR appCmdLine)
 {
     HANDLE process = INVALID_HANDLE_VALUE;
     STARTUPINFOW startupInfo;
@@ -568,7 +568,7 @@ static HANDLE create_breakaway_worker_in_job(struct thread_data *data, PWSTR app
     return process;
 }
 
-int cmd_interactive(struct thread_data *data)
+int cmd_interactive(struct thread_data* data)
 {
     int i = 0;
     int max_i;
@@ -658,7 +658,7 @@ int cmd_interactive(struct thread_data *data)
     printf("Following filter control devices are available:\n");
     while (usbpcapFilters[i] != NULL)
     {
-        printf("%d %s\n", i+1, usbpcapFilters[i]->device);
+        printf("%d %s\n", i + 1, usbpcapFilters[i]->device);
         enumerate_print_usbpcap_interactive(usbpcapFilters[i]->device);
         i++;
     }
@@ -690,7 +690,7 @@ int cmd_interactive(struct thread_data *data)
                 }
                 else
                 {
-                    data->device = _strdup(usbpcapFilters[value-1]->device);
+                    data->device = _strdup(usbpcapFilters[value - 1]->device);
                     finished = TRUE;
                 }
             }
@@ -743,9 +743,9 @@ int cmd_interactive(struct thread_data *data)
  * \param[in] process Worker process handle
  *                    INVALID_HANDLE_VALUE if not using elevated worker.
  */
-static void wait_for_exit_signal(struct thread_data *data, HANDLE process)
+static void wait_for_exit_signal(struct thread_data* data, HANDLE process)
 {
-    HANDLE handle_table[3U] = {INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE};
+    HANDLE handle_table[3U] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
     HANDLE stdin_handle = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dw;
     int count = 0;
@@ -824,7 +824,7 @@ static void wait_for_exit_signal(struct thread_data *data, HANDLE process)
     }
 }
 
-static void start_capture(struct thread_data *data)
+static void start_capture(struct thread_data* data)
 {
     HANDLE pipe_handle = INVALID_HANDLE_VALUE;
     HANDLE process = INVALID_HANDLE_VALUE;
@@ -847,8 +847,8 @@ static void start_capture(struct thread_data *data)
         return;
     }
 
-    data->exit_event = CreateEvent(NULL, /* Handle cannot be inherited */
-                                   TRUE, /* Manual Reset */
+    data->exit_event = CreateEvent(NULL,  /* Handle cannot be inherited */
+                                   TRUE,  /* Manual Reset */
                                    FALSE, /* Default to not signalled */
                                    NULL);
 
@@ -868,7 +868,7 @@ static void start_capture(struct thread_data *data)
                                              0,
                                              NULL,
                                              CREATE_NEW,
-                                             FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED,
+                                             FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
                                              NULL);
         }
 
@@ -885,7 +885,7 @@ static void start_capture(struct thread_data *data)
                               0,    /* use default stack size */
                               read_thread,
                               data,
-                              0,    /* use default creation flag */
+                              0, /* use default creation flag */
                               &thread_id);
 
         if (thread == NULL)
@@ -968,8 +968,8 @@ static void start_capture(struct thread_data *data)
                 else if (info.BasicLimitInformation.LimitFlags &
                          (JOB_OBJECT_LIMIT_BREAKAWAY_OK | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK))
                 {
-                   needs_breakaway = TRUE;
-                   needs_new_job = TRUE;
+                    needs_breakaway = TRUE;
+                    needs_new_job = TRUE;
                 }
                 else
                 {
@@ -1042,7 +1042,7 @@ static void start_capture(struct thread_data *data)
                                           0,    /* use default stack size */
                                           read_thread,
                                           data,
-                                          0,    /* use default creation flag */
+                                          0, /* use default creation flag */
                                           &thread_id);
                 }
                 else
@@ -1127,7 +1127,7 @@ static void print_extcap_interfaces(void)
 
     while (usbpcapFilters[i] != NULL)
     {
-        char *tmp = strrchr(usbpcapFilters[i]->device, '\\');
+        char* tmp = strrchr(usbpcapFilters[i]->device, '\\');
         if (tmp == NULL)
         {
             tmp = usbpcapFilters[i]->device;
@@ -1150,7 +1150,7 @@ static void print_extcap_dlts(void)
     printf("dlt {number=249}{name=USBPCAP}{display=USBPcap}\n");
 }
 
-static int print_extcap_options(const char *device)
+static int print_extcap_options(const char* device)
 {
     if (device == NULL)
     {
@@ -1159,7 +1159,8 @@ static int print_extcap_options(const char *device)
 
     printf("arg {number=0}{call=--snaplen}"
            "{display=Snapshot length}{tooltip=Snapshot length}"
-           "{type=unsigned}{default=%d}\n", DEFAULT_SNAPSHOT_LENGTH);
+           "{type=unsigned}{default=%d}\n",
+           DEFAULT_SNAPSHOT_LENGTH);
     printf("arg {number=1}{call=--bufferlen}"
            "{display=Capture buffer length}"
            "{tooltip=USBPcap kernel-mode capture buffer length in bytes}"
@@ -1190,11 +1191,11 @@ static int do_extcap_interfaces = 0;
 static int do_extcap_dlts = 0;
 static int do_extcap_config = 0;
 static int do_extcap_capture = 0;
-static const char *wireshark_version = NULL;
-static const char *extcap_interface = NULL;
-static const char *extcap_fifo = NULL;
+static const char* wireshark_version = NULL;
+static const char* extcap_interface = NULL;
+static const char* extcap_fifo = NULL;
 
-int cmd_extcap(struct thread_data *data)
+int cmd_extcap(struct thread_data* data)
 {
     int ret = -1;
 
@@ -1350,49 +1351,48 @@ static void print_help(void)
 }
 
 /* Commandline arguments without short option */
-#define ARG_DEVICES                    900
-#define ARG_CAPTURE_FROM_NEW_DEVICES   901
-#define ARG_INJECT_DESCRIPTORS         902
-#define ARG_EXTCAP_VERSION            1000
-#define ARG_EXTCAP_INTERFACES         1001
-#define ARG_EXTCAP_INTERFACE          1002
-#define ARG_EXTCAP_DLTS               1003
-#define ARG_EXTCAP_CONFIG             1004
-#define ARG_EXTCAP_CAPTURE            1005
-#define ARG_EXTCAP_FIFO               1006
+#define ARG_DEVICES 900
+#define ARG_CAPTURE_FROM_NEW_DEVICES 901
+#define ARG_INJECT_DESCRIPTORS 902
+#define ARG_EXTCAP_VERSION 1000
+#define ARG_EXTCAP_INTERFACES 1001
+#define ARG_EXTCAP_INTERFACE 1002
+#define ARG_EXTCAP_DLTS 1003
+#define ARG_EXTCAP_CONFIG 1004
+#define ARG_EXTCAP_CAPTURE 1005
+#define ARG_EXTCAP_FIFO 1006
 
 #if _MSC_VER >= 1700
-int __cdecl usbpcapcmd_main(int argc, CHAR **argv)
+int __cdecl usbpcapcmd_main(int argc, CHAR** argv)
 #else
-int __cdecl main(int argc, CHAR **argv)
+int __cdecl main(int argc, CHAR** argv)
 #endif
 {
     int ret = -1;
     struct thread_data data;
-    static struct option long_options[] =
-    {
-        {"help", no_argument, 0, 'h'},
-        {"device", required_argument, 0, 'd'},
-        {"output", required_argument, 0, 'o'},
-        {"snaplen", required_argument, 0, 's'},
-        {"bufferlen", required_argument, 0, 'b'},
-        {"init-non-standard-hwids", no_argument, 0, 'I'},
+    static struct option long_options[] = {
+        {                     "help",       no_argument,                     0,                          'h' },
+        {                   "device", required_argument,                     0,                          'd' },
+        {                   "output", required_argument,                     0,                          'o' },
+        {                  "snaplen", required_argument,                     0,                          's' },
+        {                "bufferlen", required_argument,                     0,                          'b' },
+        {  "init-non-standard-hwids",       no_argument,                     0,                          'I' },
         /* Capture options. */
-        {"devices", required_argument, 0, ARG_DEVICES},
-        {"capture-from-all-devices", no_argument, 0, 'A'},
-        {"capture-from-new-devices", no_argument, 0, ARG_CAPTURE_FROM_NEW_DEVICES},
-        {"inject-descriptors", no_argument, 0, ARG_INJECT_DESCRIPTORS},
+        {                  "devices", required_argument,                     0,                  ARG_DEVICES },
+        { "capture-from-all-devices",       no_argument,                     0,                          'A' },
+        { "capture-from-new-devices",       no_argument,                     0, ARG_CAPTURE_FROM_NEW_DEVICES },
+        {       "inject-descriptors",       no_argument,                     0,       ARG_INJECT_DESCRIPTORS },
         /* Extcap interface. Please note that there are no short
          * options for these and the numbers are just gopt keys.
          */
-        {"extcap-version", optional_argument, 0, ARG_EXTCAP_VERSION},
-        {"extcap-interfaces", no_argument, &do_extcap_interfaces, ARG_EXTCAP_INTERFACES},
-        {"extcap-interface", required_argument, 0, ARG_EXTCAP_INTERFACE},
-        {"extcap-dlts", no_argument, &do_extcap_dlts, ARG_EXTCAP_DLTS},
-        {"extcap-config", no_argument, &do_extcap_config, ARG_EXTCAP_CONFIG},
-        {"capture", no_argument, &do_extcap_capture, ARG_EXTCAP_CAPTURE},
-        {"fifo", required_argument, 0, ARG_EXTCAP_FIFO},
-        {0, 0, 0, 0}
+        {           "extcap-version", optional_argument,                     0,           ARG_EXTCAP_VERSION },
+        {        "extcap-interfaces",       no_argument, &do_extcap_interfaces,        ARG_EXTCAP_INTERFACES },
+        {         "extcap-interface", required_argument,                     0,         ARG_EXTCAP_INTERFACE },
+        {              "extcap-dlts",       no_argument,       &do_extcap_dlts,              ARG_EXTCAP_DLTS },
+        {            "extcap-config",       no_argument,     &do_extcap_config,            ARG_EXTCAP_CONFIG },
+        {                  "capture",       no_argument,    &do_extcap_capture,           ARG_EXTCAP_CAPTURE },
+        {                     "fifo", required_argument,                     0,              ARG_EXTCAP_FIFO },
+        {                          0,                 0,                     0,                            0 }
     };
     int option_index = 0;
     int c;
@@ -1417,77 +1417,77 @@ int __cdecl main(int argc, CHAR **argv)
     {
         switch (c)
         {
-            case 0:
-                /* getopt_long has set the flag. */
-                break;
-            case 'h': /* --help */
-                print_help();
-                return 0;
-            case 'd': /* --device */
+        case 0:
+            /* getopt_long has set the flag. */
+            break;
+        case 'h': /* --help */
+            print_help();
+            return 0;
+        case 'd': /* --device */
 #pragma warning(push)
-#pragma warning(disable:28193)
-                data.device = _strdup(optarg);
+#pragma warning(disable : 28193)
+            data.device = _strdup(optarg);
 #pragma warning(pop)
-                break;
-            case 'o': /* --output */
+            break;
+        case 'o': /* --output */
 #pragma warning(push)
-#pragma warning(disable:28193)
-                data.filename = _strdup(optarg);
+#pragma warning(disable : 28193)
+            data.filename = _strdup(optarg);
 #pragma warning(pop)
-                break;
-            case 's': /* --snaplen */
-                data.snaplen = atol(optarg);
-                if (data.snaplen == 0)
-                {
-                    fprintf(stderr, "Invalid snapshot length!\n");
-                    return -1;
-                }
-                break;
-            case 'b': /* --bufferlen */
-                data.bufferlen = atol(optarg);
-                /* Minimum buffer size if 4 KiB, maximum 128 MiB */
-                if (data.bufferlen < 4096 || data.bufferlen > 134217728)
-                {
-                    fprintf(stderr, "Invalid buffer length! "
-                                    "Valid range <4096,134217728>.\n");
-                    return -1;
-                }
-                break;
-            case 'I': /* --init-non-standard-hwids */
-                init_non_standard_roothub_hwid();
-                return 0;
-            case ARG_DEVICES:
-                data.address_list = optarg;
-                break;
-            case 'A': /* --capture-from-all-devices */
-                data.capture_all = TRUE;
-                break;
-            case ARG_CAPTURE_FROM_NEW_DEVICES:
-                data.capture_new = TRUE;
-                break;
-            case ARG_INJECT_DESCRIPTORS:
-                data.inject_descriptors = TRUE;
-                break;
-            case ARG_EXTCAP_VERSION:
-                do_extcap_version = 1;
-                wireshark_version = optarg;
-                break;
-            case ARG_EXTCAP_INTERFACE:
-                extcap_interface = optarg;
-                break;
-            case ARG_EXTCAP_FIFO:
-                run_as_extcap = 1;
-                extcap_fifo = optarg;
-                break;
-
-            case ':':
-            case '?':
-                fprintf(stderr, "Try 'USBPcapCMD.exe --help' for more information.\n");
+            break;
+        case 's': /* --snaplen */
+            data.snaplen = atol(optarg);
+            if (data.snaplen == 0)
+            {
+                fprintf(stderr, "Invalid snapshot length!\n");
                 return -1;
-
-            default:
-                printf("getopt_long() returned character code 0x%X. Please report.\n", c);
+            }
+            break;
+        case 'b': /* --bufferlen */
+            data.bufferlen = atol(optarg);
+            /* Minimum buffer size if 4 KiB, maximum 128 MiB */
+            if (data.bufferlen < 4096 || data.bufferlen > 134217728)
+            {
+                fprintf(stderr, "Invalid buffer length! "
+                                "Valid range <4096,134217728>.\n");
                 return -1;
+            }
+            break;
+        case 'I': /* --init-non-standard-hwids */
+            init_non_standard_roothub_hwid();
+            return 0;
+        case ARG_DEVICES:
+            data.address_list = optarg;
+            break;
+        case 'A': /* --capture-from-all-devices */
+            data.capture_all = TRUE;
+            break;
+        case ARG_CAPTURE_FROM_NEW_DEVICES:
+            data.capture_new = TRUE;
+            break;
+        case ARG_INJECT_DESCRIPTORS:
+            data.inject_descriptors = TRUE;
+            break;
+        case ARG_EXTCAP_VERSION:
+            do_extcap_version = 1;
+            wireshark_version = optarg;
+            break;
+        case ARG_EXTCAP_INTERFACE:
+            extcap_interface = optarg;
+            break;
+        case ARG_EXTCAP_FIFO:
+            run_as_extcap = 1;
+            extcap_fifo = optarg;
+            break;
+
+        case ':':
+        case '?':
+            fprintf(stderr, "Try 'USBPcapCMD.exe --help' for more information.\n");
+            return -1;
+
+        default:
+            printf("getopt_long() returned character code 0x%X. Please report.\n", c);
+            return -1;
         }
     }
 

@@ -9,7 +9,7 @@
 
 VOID DkCsqInsertIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 {
-    PDEVICE_EXTENSION   pDevExt = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
 
     pDevExt = CONTAINING_RECORD(pCsq, DEVICE_EXTENSION,
                                 context.control.ioCsq);
@@ -22,7 +22,7 @@ VOID DkCsqInsertIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 
 VOID DkCsqRemoveIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 {
-    BOOLEAN  bRes = FALSE;
+    BOOLEAN bRes = FALSE;
 
     UNREFERENCED_PARAMETER(pCsq);
 
@@ -31,10 +31,10 @@ VOID DkCsqRemoveIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 
 PIRP DkCsqPeekNextIrp(__in PIO_CSQ pCsq, __in PIRP pIrp, __in PVOID pCtx)
 {
-    PDEVICE_EXTENSION   pDevExt = NULL;
-    PIRP                pNextIrp = NULL;
-    PLIST_ENTRY         pNextList = NULL, pHeadList = NULL;
-    PIO_STACK_LOCATION  pStack = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
+    PIRP pNextIrp = NULL;
+    PLIST_ENTRY pNextList = NULL, pHeadList = NULL;
+    PIO_STACK_LOCATION pStack = NULL;
 
     pDevExt = CONTAINING_RECORD(pCsq, DEVICE_EXTENSION,
                                 context.control.ioCsq);
@@ -75,10 +75,10 @@ PIRP DkCsqPeekNextIrp(__in PIO_CSQ pCsq, __in PIRP pIrp, __in PVOID pCtx)
 }
 
 __drv_raisesIRQL(DISPATCH_LEVEL)
-__drv_maxIRQL(DISPATCH_LEVEL)
-VOID DkCsqAcquireLock(__in PIO_CSQ pCsq, __out __drv_out_deref(__drv_savesIRQL) PKIRQL pKIrql)
+    __drv_maxIRQL(DISPATCH_LEVEL)
+        VOID DkCsqAcquireLock(__in PIO_CSQ pCsq, __out __drv_out_deref(__drv_savesIRQL) PKIRQL pKIrql)
 {
-    PDEVICE_EXTENSION  pDevExt = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
 
     pDevExt = CONTAINING_RECORD(pCsq, DEVICE_EXTENSION,
                                 context.control.ioCsq);
@@ -89,9 +89,9 @@ VOID DkCsqAcquireLock(__in PIO_CSQ pCsq, __out __drv_out_deref(__drv_savesIRQL) 
 }
 
 __drv_requiresIRQL(DISPATCH_LEVEL)
-VOID DkCsqReleaseLock(__in PIO_CSQ pCsq, __in __drv_in(__drv_restoresIRQL) KIRQL kIrql)
+    VOID DkCsqReleaseLock(__in PIO_CSQ pCsq, __in __drv_in(__drv_restoresIRQL) KIRQL kIrql)
 {
-    PDEVICE_EXTENSION  pDevExt = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
 
     pDevExt = CONTAINING_RECORD(pCsq, DEVICE_EXTENSION,
                                 context.control.ioCsq);
@@ -117,11 +117,11 @@ VOID DkCsqCompleteCanceledIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
 
 VOID DkCsqCleanUpQueue(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 {
-    PIO_STACK_LOCATION  pStack = NULL;
-    PDEVICE_EXTENSION   pDevExt = NULL;
-    PIRP                pPendIrp = NULL;
+    PIO_STACK_LOCATION pStack = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
+    PIRP pPendIrp = NULL;
 
-    pDevExt = (PDEVICE_EXTENSION) pDevObj->DeviceExtension;
+    pDevExt = (PDEVICE_EXTENSION)pDevObj->DeviceExtension;
 
     ASSERT(pDevExt->deviceMagic == USBPCAP_MAGIC_CONTROL);
 
@@ -142,4 +142,3 @@ VOID DkCsqCleanUpQueue(PDEVICE_OBJECT pDevObj, PIRP pIrp)
         }
     }
 }
-

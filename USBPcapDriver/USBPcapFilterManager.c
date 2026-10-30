@@ -14,7 +14,7 @@
  */
 static void USBPcapFreeDeviceData(IN PDEVICE_EXTENSION pDevExt)
 {
-    PUSBPCAP_DEVICE_DATA  pDeviceData;
+    PUSBPCAP_DEVICE_DATA pDeviceData;
 
     if (pDevExt == NULL)
     {
@@ -83,16 +83,16 @@ static void USBPcapFreeDeviceData(IN PDEVICE_EXTENSION pDevExt)
 static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
                                           IN PDEVICE_EXTENSION pParentDevExt)
 {
-    PUSBPCAP_DEVICE_DATA  pDeviceData;
-    NTSTATUS              status = STATUS_SUCCESS;
-    BOOLEAN               allocRoothubData;
+    PUSBPCAP_DEVICE_DATA pDeviceData;
+    NTSTATUS status = STATUS_SUCCESS;
+    BOOLEAN allocRoothubData;
 
     allocRoothubData = (pParentDevExt == NULL);
 
     /* Allocate USBPCAP_DEVICE_DATA */
     pDeviceData = USBPcapAllocateNonPaged(
-                                        sizeof(USBPCAP_DEVICE_DATA),
-                                        DKPORT_MTAG);
+        sizeof(USBPCAP_DEVICE_DATA),
+        DKPORT_MTAG);
 
     if (pDeviceData != NULL)
     {
@@ -129,8 +129,8 @@ static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
             /* Allocate USBPCAP_ROOTHUB_DATA */
             pDeviceData->pRootData =
                 USBPcapAllocateNonPaged(
-                                      sizeof(USBPCAP_ROOTHUB_DATA),
-                                      DKPORT_MTAG);
+                    sizeof(USBPCAP_ROOTHUB_DATA),
+                    DKPORT_MTAG);
             if (pDeviceData->pRootData != NULL)
             {
                 /* Initialize empty buffer */
@@ -204,15 +204,15 @@ static ULONG GetDeviceTypeToUse(PDEVICE_OBJECT pdo)
 
 /////////////////////////////////////////////////////////////////////
 // Functions to attach and detach USB Root HUB filter
-#pragma prefast(suppress: 28152, "Suppress 28152 for path where filter was not created. Please remove this suppression after doing any changes to AddDevice()!")
+#pragma prefast(suppress : 28152, "Suppress 28152 for path where filter was not created. Please remove this suppression after doing any changes to AddDevice()!")
 NTSTATUS AddDevice(IN PDRIVER_OBJECT pDrvObj,
                    IN PDEVICE_OBJECT pTgtDevObj)
 {
-    NTSTATUS          ntStat = STATUS_SUCCESS;
-    UNICODE_STRING    usTgtName;
-    PDEVICE_OBJECT    pHubFilter = NULL;
+    NTSTATUS ntStat = STATUS_SUCCESS;
+    UNICODE_STRING usTgtName;
+    PDEVICE_OBJECT pHubFilter = NULL;
     PDEVICE_EXTENSION pDevExt = NULL;
-    BOOLEAN           isRootHub;
+    BOOLEAN isRootHub;
 
     // 1. Check if device is Root Hub
     isRootHub = USBPcapIsDeviceRootHub(pTgtDevObj);
@@ -233,7 +233,7 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT pDrvObj,
         goto EndFunc;
     }
 
-    pDevExt = (PDEVICE_EXTENSION) pHubFilter->DeviceExtension;
+    pDevExt = (PDEVICE_EXTENSION)pHubFilter->DeviceExtension;
     pDevExt->deviceMagic = USBPCAP_MAGIC_ROOTHUB;
     pDevExt->pThisDevObj = pHubFilter;
     pDevExt->pDrvObj = pDrvObj;
@@ -262,9 +262,9 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT pDrvObj,
 
     if (NT_SUCCESS(ntStat))
     {
-        PDEVICE_OBJECT         control = NULL;
-        PUSBPCAP_ROOTHUB_DATA  pRootData;
-        USHORT                 id;
+        PDEVICE_OBJECT control = NULL;
+        PUSBPCAP_ROOTHUB_DATA pRootData;
+        USHORT id;
 
         ntStat = USBPcapCreateRootHubControlDevice(pDevExt,
                                                    &control,
@@ -317,9 +317,9 @@ VOID DkDetachAndDeleteHubFilt(PDEVICE_EXTENSION pDevExt)
 //
 NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pParentDevExt, PDEVICE_OBJECT pTgtDevObj)
 {
-    NTSTATUS           ntStat = STATUS_SUCCESS;
-    PDEVICE_OBJECT     pDeviceObject = NULL;
-    PDEVICE_EXTENSION  pDevExt = NULL;
+    NTSTATUS ntStat = STATUS_SUCCESS;
+    PDEVICE_OBJECT pDeviceObject = NULL;
+    PDEVICE_EXTENSION pDevExt = NULL;
 
     // 1. Create filter object for target device object
     ntStat = IoCreateDevice(pParentDevExt->pDrvObj,
@@ -338,7 +338,7 @@ NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pParentDevExt, PDEVICE_OBJECT pT
         return ntStat;
     }
 
-    pDevExt = (PDEVICE_EXTENSION) pDeviceObject->DeviceExtension;
+    pDevExt = (PDEVICE_EXTENSION)pDeviceObject->DeviceExtension;
     pDevExt->deviceMagic = USBPCAP_MAGIC_DEVICE;
     pDevExt->pThisDevObj = pDeviceObject;
     pDevExt->parentRemoveLock = &pParentDevExt->removeLock;
@@ -385,7 +385,7 @@ EndAttDev:
 
 VOID DkDetachAndDeleteTgt(PDEVICE_EXTENSION pDevExt)
 {
-    PUSBPCAP_DEVICE_DATA  pDeviceData = pDevExt->context.usb.pDeviceData;
+    PUSBPCAP_DEVICE_DATA pDeviceData = pDevExt->context.usb.pDeviceData;
 
     if (pDevExt->parentRemoveLock)
     {
@@ -410,14 +410,14 @@ VOID DkDetachAndDeleteTgt(PDEVICE_EXTENSION pDevExt)
 //
 NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
 {
-    NTSTATUS            ntStat = STATUS_SUCCESS, clStat = STATUS_SUCCESS;
-    HANDLE              hObj;
-    OBJECT_ATTRIBUTES   oa;
-    UNICODE_STRING      usHubPath, usTgtDev;
-    ULONG               ulRet;
-    ULONG               inputLength;
-    ULONG               outputLength;
-    PWCH                input;
+    NTSTATUS ntStat = STATUS_SUCCESS, clStat = STATUS_SUCCESS;
+    HANDLE hObj;
+    OBJECT_ATTRIBUTES oa;
+    UNICODE_STRING usHubPath, usTgtDev;
+    ULONG ulRet;
+    ULONG inputLength;
+    ULONG outputLength;
+    PWCH input;
 
     inputLength = pStack->Parameters.DeviceIoControl.InputBufferLength;
     outputLength = pStack->Parameters.DeviceIoControl.OutputBufferLength;
@@ -449,7 +449,7 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
 
     usTgtDev.Length = 0;
     usTgtDev.MaximumLength = 512;
-    usTgtDev.Buffer = (PWSTR) USBPcapAllocateNonPaged( 512, DKPORT_MTAG);
+    usTgtDev.Buffer = (PWSTR)USBPcapAllocateNonPaged(512, DKPORT_MTAG);
     if (usTgtDev.Buffer == NULL)
     {
         ZwClose(hObj);
@@ -465,7 +465,6 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
         pIrp->IoStatus.Information = 0;
 
         *pUlRes = 0;
-
     }
     else
     {
@@ -484,7 +483,7 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
                           usTgtDev.Buffer,
                           usTgtDev.Length);
             pIrp->IoStatus.Information = usTgtDev.Length;
-            *pUlRes = (ULONG) usTgtDev.Length;
+            *pUlRes = (ULONG)usTgtDev.Length;
         }
         pIrp->IoStatus.Status = ntStat;
     }

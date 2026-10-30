@@ -14,7 +14,7 @@ volatile LONG g_controlId;
 
 NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 {
-    UCHAR  ucCnt = 0U;
+    UCHAR ucCnt = 0U;
 
 /* Opt the legacy NonPagedPool type into non-executable pool.
  * Windows Server 2025 rejects executable nonpaged allocations.
@@ -25,8 +25,8 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 
     DkDbgStr("3");
 
-    pDrvObj->DriverUnload                = DkUnload;
-    pDrvObj->DriverExtension->AddDevice  = AddDevice;
+    pDrvObj->DriverUnload = DkUnload;
+    pDrvObj->DriverExtension->AddDevice = AddDevice;
 
     for (ucCnt = 0; ucCnt <= IRP_MJ_MAXIMUM_FUNCTION; ucCnt++)
     {
@@ -35,7 +35,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 
     pDrvObj->MajorFunction[IRP_MJ_CREATE] =
         pDrvObj->MajorFunction[IRP_MJ_CLEANUP] =
-        pDrvObj->MajorFunction[IRP_MJ_CLOSE]   = DkCreateClose;
+            pDrvObj->MajorFunction[IRP_MJ_CLOSE] = DkCreateClose;
 
     pDrvObj->MajorFunction[IRP_MJ_READ] =
         pDrvObj->MajorFunction[IRP_MJ_WRITE] = DkReadWrite;
@@ -46,7 +46,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
 
     pDrvObj->MajorFunction[IRP_MJ_PNP] = DkPnP;
 
-    pDrvObj->MajorFunction[IRP_MJ_POWER]                    = DkPower;
+    pDrvObj->MajorFunction[IRP_MJ_POWER] = DkPower;
 
     g_controlId = 0;
 
@@ -60,20 +60,20 @@ VOID DkUnload(PDRIVER_OBJECT pDrvObj)
 
 VOID DkCompleteRequest(PIRP pIrp, NTSTATUS resStat, UINT_PTR uiInfo)
 {
-    pIrp->IoStatus.Status      = resStat;
+    pIrp->IoStatus.Status = resStat;
     pIrp->IoStatus.Information = uiInfo;
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 }
 
 NTSTATUS DkDefault(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 {
-    NTSTATUS            ntStat = STATUS_SUCCESS;
-    PDEVICE_EXTENSION   pDevExt = NULL;
-    PDEVICE_OBJECT      pNextDevObj = NULL;
+    NTSTATUS ntStat = STATUS_SUCCESS;
+    PDEVICE_EXTENSION pDevExt = NULL;
+    PDEVICE_OBJECT pNextDevObj = NULL;
 
-    pDevExt = (PDEVICE_EXTENSION) pDevObj->DeviceExtension;
+    pDevExt = (PDEVICE_EXTENSION)pDevObj->DeviceExtension;
 
-    ntStat = IoAcquireRemoveLock(&pDevExt->removeLock, (PVOID) pIrp);
+    ntStat = IoAcquireRemoveLock(&pDevExt->removeLock, (PVOID)pIrp);
     if (!NT_SUCCESS(ntStat))
     {
         DkDbgVal("Error acquire lock!", ntStat);
@@ -102,22 +102,22 @@ NTSTATUS DkDefault(PDEVICE_OBJECT pDevObj, PIRP pIrp)
         ntStat = IoCallDriver(pNextDevObj, pIrp);
     }
 
-    IoReleaseRemoveLock(&pDevExt->removeLock, (PVOID) pIrp);
+    IoReleaseRemoveLock(&pDevExt->removeLock, (PVOID)pIrp);
 
     return ntStat;
 }
 
 NTSTATUS DkForwardAndWait(PDEVICE_OBJECT pNextDevObj, PIRP pIrp)
 {
-    KEVENT    kEvt;
-    NTSTATUS  ntStat = STATUS_SUCCESS;
+    KEVENT kEvt;
+    NTSTATUS ntStat = STATUS_SUCCESS;
 
     KeInitializeEvent(&kEvt, NotificationEvent, FALSE);
 
     IoCopyCurrentIrpStackLocationToNext(pIrp);
     IoSetCompletionRoutine(pIrp,
-        (PIO_COMPLETION_ROUTINE) DkGenCompletion,
-        (PVOID) &kEvt, TRUE, TRUE, TRUE);
+                           (PIO_COMPLETION_ROUTINE)DkGenCompletion,
+                           (PVOID)&kEvt, TRUE, TRUE, TRUE);
 
     ntStat = IoCallDriver(pNextDevObj, pIrp);
 
@@ -132,9 +132,9 @@ NTSTATUS DkForwardAndWait(PDEVICE_OBJECT pNextDevObj, PIRP pIrp)
 
 NTSTATUS DkGenCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
 {
-    PKEVENT  pEvt = NULL;
+    PKEVENT pEvt = NULL;
 
-    pEvt = (PKEVENT) pCtx;
+    pEvt = (PKEVENT)pCtx;
     if (pEvt == NULL)
     {
         return STATUS_UNSUCCESSFUL;
@@ -144,4 +144,3 @@ NTSTATUS DkGenCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-

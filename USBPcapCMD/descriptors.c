@@ -14,23 +14,23 @@
 #include "iocontrol.h"
 #include "USBPcap.h"
 
-#define URB_SELECT_CONFIGURATION       0x0000
-#define URB_CONTROL_TRANSFER           0x0008
+#define URB_SELECT_CONFIGURATION 0x0000
+#define URB_CONTROL_TRANSFER 0x0008
 #define URB_GET_DESCRIPTOR_FROM_DEVICE 0x000b
 
 typedef struct _list_entry
 {
-    void *data; /* Packet data without pcaprec_hdr_t */
+    void* data; /* Packet data without pcaprec_hdr_t */
     int length; /* data length in bytes */
-    struct _list_entry *next;
+    struct _list_entry* next;
 } list_entry;
 
 typedef struct _descriptor_callback_context
 {
     USHORT roothub;
     PUSBPCAP_ADDRESS_FILTER addresses;
-    list_entry *head;
-    list_entry *tail;
+    list_entry* head;
+    list_entry* tail;
 } descriptor_callback_context;
 
 /* Get ddescriptor for given device
@@ -62,7 +62,7 @@ static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(HANDLE hub, ULONG port, UCH
     memset(request, 0, nBytes);
     request->ConnectionIndex = port;
     request->SetupPacket.bmRequest = 0x80; /* Device to Host */
-    request->SetupPacket.bRequest = 0x06; /* GET DESCRIPTOR */
+    request->SetupPacket.bRequest = 0x06;  /* GET DESCRIPTOR */
     request->SetupPacket.wValue = (USB_CONFIGURATION_DESCRIPTOR_TYPE << 8) | index;
     request->SetupPacket.wIndex = 0; /* Language ID for String Descriptors */
     request->SetupPacket.wLength = (USHORT)(nBytes - sizeof(USB_DESCRIPTOR_REQUEST));
@@ -99,7 +99,7 @@ static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(HANDLE hub, ULONG port, UCH
     descriptor = (PUSB_CONFIGURATION_DESCRIPTOR)(request->Data);
     request->ConnectionIndex = port;
     request->SetupPacket.bmRequest = 0x80; /* Device to Host */
-    request->SetupPacket.bRequest = 0x06; /* GET DESCRIPTOR */
+    request->SetupPacket.bRequest = 0x06;  /* GET DESCRIPTOR */
     request->SetupPacket.wValue = (USB_CONFIGURATION_DESCRIPTOR_TYPE << 8) | index;
     request->SetupPacket.wIndex = 0; /* Language ID for String Descriptors */
     request->SetupPacket.wLength = (USHORT)(nBytes - sizeof(USB_DESCRIPTOR_REQUEST));
@@ -139,7 +139,7 @@ static void initialize_control_header(PUSBPCAP_BUFFER_CONTROL_HEADER hdr,
 {
     hdr->header.headerLen = sizeof(USBPCAP_BUFFER_CONTROL_HEADER);
     hdr->header.irpId = 0;
-    hdr->header.status = 0;        /* USBD_STATUS_SUCCESS */
+    hdr->header.status = 0; /* USBD_STATUS_SUCCESS */
     hdr->header.function = function;
     hdr->header.info = fromPDO ? 1 : 0;
     hdr->header.bus = bus;
@@ -150,9 +150,9 @@ static void initialize_control_header(PUSBPCAP_BUFFER_CONTROL_HEADER hdr,
     hdr->stage = stage;
 }
 
-static void add_to_list(descriptor_callback_context *ctx, void *data, int length)
+static void add_to_list(descriptor_callback_context* ctx, void* data, int length)
 {
-    list_entry *new_tail = (list_entry*)malloc(sizeof(list_entry));
+    list_entry* new_tail = (list_entry*)malloc(sizeof(list_entry));
     new_tail->data = data;
     new_tail->length = length;
     new_tail->next = NULL;
@@ -167,9 +167,9 @@ static void add_to_list(descriptor_callback_context *ctx, void *data, int length
     }
 }
 
-static void free_list(list_entry *head)
+static void free_list(list_entry* head)
 {
-    list_entry *e;
+    list_entry* e;
 
     if (!head)
     {
@@ -179,14 +179,14 @@ static void free_list(list_entry *head)
     e = head;
     while (e)
     {
-        list_entry *tmp = e;
+        list_entry* tmp = e;
         e = e->next;
         free(tmp->data);
         free(tmp);
     }
 }
 
-static void write_setup_packet(descriptor_callback_context *ctx,
+static void write_setup_packet(descriptor_callback_context* ctx,
                                USHORT function,
                                USHORT deviceAddress,
                                UINT8 bmRequestType,
@@ -197,9 +197,9 @@ static void write_setup_packet(descriptor_callback_context *ctx,
                                BOOL out)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + 8;
-    UINT8 *data = (UINT8*)malloc(data_len);
+    UINT8* data = (UINT8*)malloc(data_len);
     PUSBPCAP_BUFFER_CONTROL_HEADER hdr = (PUSBPCAP_BUFFER_CONTROL_HEADER)data;
-    UINT8 *setup = &data[sizeof(USBPCAP_BUFFER_CONTROL_HEADER)];
+    UINT8* setup = &data[sizeof(USBPCAP_BUFFER_CONTROL_HEADER)];
 
     initialize_control_header(hdr, ctx->roothub, deviceAddress, 8,
                               USBPCAP_CONTROL_STAGE_SETUP, function, FALSE, out);
@@ -216,15 +216,15 @@ static void write_setup_packet(descriptor_callback_context *ctx,
     add_to_list(ctx, data, data_len);
 }
 
-static void write_complete_packet(descriptor_callback_context *ctx,
+static void write_complete_packet(descriptor_callback_context* ctx,
                                   USHORT function,
                                   USHORT deviceAddress,
-                                  void *payload,
+                                  void* payload,
                                   int payload_length,
                                   BOOL out)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + payload_length;
-    UINT8 *data = (UINT8*)malloc(data_len);
+    UINT8* data = (UINT8*)malloc(data_len);
     PUSBPCAP_BUFFER_CONTROL_HEADER hdr = (PUSBPCAP_BUFFER_CONTROL_HEADER)data;
 
     initialize_control_header(hdr, ctx->roothub, deviceAddress, payload_length,
@@ -238,14 +238,14 @@ static void write_complete_packet(descriptor_callback_context *ctx,
 }
 
 static void
-write_device_descriptor_complete(descriptor_callback_context *ctx,
+write_device_descriptor_complete(descriptor_callback_context* ctx,
                                  USHORT deviceAddress,
                                  PUSB_DEVICE_DESCRIPTOR descriptor)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + 18;
-    UINT8 *data = (UINT8*)malloc(data_len);
+    UINT8* data = (UINT8*)malloc(data_len);
     PUSBPCAP_BUFFER_CONTROL_HEADER hdr = (PUSBPCAP_BUFFER_CONTROL_HEADER)data;
-    UINT8 *payload = &data[sizeof(USBPCAP_BUFFER_CONTROL_HEADER)];
+    UINT8* payload = &data[sizeof(USBPCAP_BUFFER_CONTROL_HEADER)];
 
     initialize_control_header(hdr, ctx->roothub, deviceAddress, 18,
                               USBPCAP_CONTROL_STAGE_COMPLETE,
@@ -275,9 +275,9 @@ write_device_descriptor_complete(descriptor_callback_context *ctx,
 
 static void
 descriptor_callback(HANDLE hub, ULONG port, USHORT deviceAddress,
-                    PUSB_DEVICE_DESCRIPTOR desc, void *context)
+                    PUSB_DEVICE_DESCRIPTOR desc, void* context)
 {
-    descriptor_callback_context *ctx = (descriptor_callback_context *)context;
+    descriptor_callback_context* ctx = (descriptor_callback_context*)context;
     PUSB_DESCRIPTOR_REQUEST request;
 
     if (!USBPcapIsDeviceFiltered(ctx->addresses, deviceAddress))
@@ -317,11 +317,11 @@ descriptor_callback(HANDLE hub, ULONG port, USHORT deviceAddress,
     free(request);
 }
 
-void *generate_pcap_packets(list_entry *head, int *out_len)
+void* generate_pcap_packets(list_entry* head, int* out_len)
 {
     int total_length = 0;
-    list_entry *e;
-    UINT8 *pcap;
+    list_entry* e;
+    UINT8* pcap;
     int offset;
 
     for (e = head; e; e = e->next)
@@ -343,8 +343,8 @@ void *generate_pcap_packets(list_entry *head, int *out_len)
         timestamp.LowPart = ts.dwLowDateTime;
         timestamp.HighPart = ts.dwHighDateTime;
 
-        hdr.ts_sec = (UINT32)(timestamp.QuadPart/10000000-11644473600);
-        hdr.ts_usec = (UINT32)((timestamp.QuadPart%10000000)/10);
+        hdr.ts_sec = (UINT32)(timestamp.QuadPart / 10000000 - 11644473600);
+        hdr.ts_usec = (UINT32)((timestamp.QuadPart % 10000000) / 10);
         hdr.incl_len = e->length;
         hdr.orig_len = e->length;
 
@@ -358,19 +358,19 @@ void *generate_pcap_packets(list_entry *head, int *out_len)
     return pcap;
 }
 
-void *descriptors_generate_pcap(const char *filter, int *pcap_length, PUSBPCAP_ADDRESS_FILTER addresses)
+void* descriptors_generate_pcap(const char* filter, int* pcap_length, PUSBPCAP_ADDRESS_FILTER addresses)
 {
-    void *pcap_packets;
+    void* pcap_packets;
     int pcap_packets_length;
     descriptor_callback_context ctx;
-    const char *tmp;
+    const char* tmp;
     for (tmp = filter; *tmp; ++tmp) { /* Nothing to do here */ }
     --tmp;
     while (tmp > filter)
     {
         if ((*tmp >= '0') && (*tmp <= '9'))
         {
-           --tmp;
+            --tmp;
         }
         else
         {
@@ -390,7 +390,7 @@ void *descriptors_generate_pcap(const char *filter, int *pcap_length, PUSBPCAP_A
     return pcap_packets;
 }
 
-void descriptors_free_pcap(void *pcap)
+void descriptors_free_pcap(void* pcap)
 {
     free(pcap);
 }
