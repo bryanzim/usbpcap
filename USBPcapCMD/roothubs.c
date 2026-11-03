@@ -8,12 +8,14 @@
  */
 
 #include <windows.h>
+
 #include <Setupapi.h>
 #include <Usbiodef.h>
 #include <cfgmgr32.h>
 #include <tchar.h>
-#include <stdlib.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct
 {
@@ -24,14 +26,14 @@ typedef struct
 
 static StringArray non_standard_hwids; /* Stores non standard HWIDs. */
 
-static void init_string_array(StringArray* a, int initial_size)
+static void init_string_array(StringArray* const a, const int initial_size)
 {
     a->array = (LPTSTR*)malloc(initial_size * sizeof(LPTSTR));
     a->used = 0;
     a->size = initial_size;
 }
 
-static void insert_string_array(StringArray* a, LPTSTR hwid)
+static void insert_string_array(StringArray* const a, const LPTSTR hwid)
 {
     if (a->used == a->size)
     {
@@ -51,10 +53,10 @@ static void insert_string_array(StringArray* a, LPTSTR hwid)
     a->array[a->used++] = _tcsdup(hwid);
 }
 
-static void free_string_array(StringArray* a)
+static void free_string_array(StringArray* const a)
 {
     int i;
-    for (i = 0; i < a->used; i++)
+    for (i = 0; i < a->used; ++i)
     {
         free(a->array[i]);
     }
@@ -63,7 +65,7 @@ static void free_string_array(StringArray* a)
     a->used = a->size = 0;
 }
 
-static BOOL is_standard_hwid(LPTSTR hwid)
+static BOOL is_standard_hwid(const LPTSTR hwid)
 {
     if (hwid == NULL)
     {
@@ -85,15 +87,15 @@ static BOOL is_standard_hwid(LPTSTR hwid)
     return FALSE;
 }
 
-static void add_non_standard_hwid(LPTSTR hwid)
+static void add_non_standard_hwid(const LPTSTR hwid)
 {
     insert_string_array(&non_standard_hwids, hwid);
 }
 
-static BOOL is_non_standard_hwid_known(LPTSTR hwid)
+static BOOL is_non_standard_hwid_known(const LPTSTR hwid)
 {
     int i;
-    for (i = 0; i < non_standard_hwids.used; i++)
+    for (i = 0; i < non_standard_hwids.used; ++i)
     {
         if (_tcscmp(non_standard_hwids.array[i], hwid) == 0)
         {
@@ -104,7 +106,7 @@ static BOOL is_non_standard_hwid_known(LPTSTR hwid)
     return FALSE;
 }
 
-static PTSTR build_non_standard_reg_multi_sz(StringArray* a,
+static PTSTR build_non_standard_reg_multi_sz(StringArray* const a,
                                              int* length)
 {
     PTSTR multi_sz;
@@ -113,7 +115,7 @@ static PTSTR build_non_standard_reg_multi_sz(StringArray* a,
     int i;
     int len;
 
-    for (len = 1, i = 0; i < a->used; i++)
+    for (len = 1, i = 0; i < a->used; ++i)
     {
         len += _tcslen(a->array[i]) + 1;
     }
@@ -123,7 +125,7 @@ static PTSTR build_non_standard_reg_multi_sz(StringArray* a,
     multi_sz = malloc(len);
     memset(multi_sz, 0, len);
 
-    for (ptr = multi_sz, i = 0; i < a->used; i++)
+    for (ptr = multi_sz, i = 0; i < a->used; ++i)
     {
         _tcscpy_s(ptr, len - (ptr - multi_sz), a->array[i]);
         ptr += _tcslen(a->array[i]) + 1;
@@ -133,7 +135,7 @@ static PTSTR build_non_standard_reg_multi_sz(StringArray* a,
     return multi_sz;
 }
 
-static void set_non_standard_hwids_reg_key(PTSTR multi_sz, int length)
+static void set_non_standard_hwids_reg_key(const PTSTR multi_sz, const int length)
 {
     HKEY hkey;
     LONG regVal;
@@ -173,13 +175,13 @@ static void set_non_standard_hwids_reg_key(PTSTR multi_sz, int length)
  * Array must be freed using DelMultiSz().
  * Returns NULL on failure.
  */
-__drv_allocatesMem(object) static LPTSTR* GetMultiSzIndexArray(__in __drv_aliasesMem LPTSTR MultiSz)
+__drv_allocatesMem(object) static LPTSTR* GetMultiSzIndexArray(__in __drv_aliasesMem const LPTSTR MultiSz)
 {
     LPTSTR scan;
     LPTSTR* array;
     int elements;
 
-    for (scan = MultiSz, elements = 0; scan[0U]; elements++)
+    for (scan = MultiSz, elements = 0; scan[0U]; ++elements)
     {
         scan += lstrlen(scan) + 1;
     }
@@ -189,10 +191,10 @@ __drv_allocatesMem(object) static LPTSTR* GetMultiSzIndexArray(__in __drv_aliase
         return NULL;
     }
     array[0U] = MultiSz;
-    array++;
+    ++array;
     if (elements)
     {
-        for (scan = MultiSz, elements = 0; scan[0U]; elements++)
+        for (scan = MultiSz, elements = 0; scan[0U]; ++elements)
         {
             array[elements] = scan;
             scan += lstrlen(scan) + 1;
@@ -209,7 +211,7 @@ __drv_allocatesMem(object) static LPTSTR* GetMultiSzIndexArray(__in __drv_aliase
  * Array must be freed using DelMultiSz().
  * Returns NULL on failure.
  */
-__drv_allocatesMem(object) static LPTSTR* GetDevMultiSz(DEVINST roothub, ULONG property)
+__drv_allocatesMem(object) static LPTSTR* GetDevMultiSz(const DEVINST roothub, const ULONG property)
 {
     LPTSTR buffer;
     ULONG size;
@@ -218,13 +220,13 @@ __drv_allocatesMem(object) static LPTSTR* GetDevMultiSz(DEVINST roothub, ULONG p
     DWORD szChars;
     CONFIGRET ret;
 
-    size = 0;
+    size = 0U;
     buffer = NULL;
 
     ret = CM_Get_DevNode_Registry_Property(roothub, property, &dataType,
                                            buffer, &size, 0);
 
-    if (ret != CR_BUFFER_SMALL || dataType != REG_MULTI_SZ)
+    if ((ret != CR_BUFFER_SMALL) || (dataType != REG_MULTI_SZ))
     {
         goto failed;
     }
@@ -269,7 +271,7 @@ static void DelMultiSz(__in_opt __drv_freesMem(object) LPTSTR* Array)
 {
     if (Array)
     {
-        Array--;
+        --Array;
         if (Array[0U])
         {
             free(Array[0U]);
@@ -279,9 +281,9 @@ static void DelMultiSz(__in_opt __drv_freesMem(object) LPTSTR* Array)
 }
 
 
-void find_non_standard_hwids(HDEVINFO devs,
-                             PSP_DEVINFO_DATA devInfo,
-                             PSP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail)
+void find_non_standard_hwids(const HDEVINFO devs,
+                             const PSP_DEVINFO_DATA devInfo,
+                             const PSP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail)
 {
     LPTSTR* hwIds = NULL;
     LPTSTR* compatIds = NULL;
@@ -301,7 +303,7 @@ void find_non_standard_hwids(HDEVINFO devs,
 
         if (hwIds)
         {
-            for (tmpIds = hwIds; tmpIds[0U] != NULL; tmpIds++)
+            for (tmpIds = hwIds; tmpIds[0U] != NULL; ++tmpIds)
             {
                 printf("Hardware ID: %s\n", tmpIds[0U]);
                 if (is_standard_hwid(tmpIds[0U]) == TRUE)
@@ -329,7 +331,7 @@ void find_non_standard_hwids(HDEVINFO devs,
 
         if (compatIds)
         {
-            for (tmpIds = compatIds; tmpIds[0U] != NULL; tmpIds++)
+            for (tmpIds = compatIds; tmpIds[0U] != NULL; ++tmpIds)
             {
                 printf("Compatible ID: %s\n", tmpIds[0U]);
             }
@@ -342,9 +344,9 @@ void find_non_standard_hwids(HDEVINFO devs,
     }
 }
 
-void restart_device(HDEVINFO devs,
-                    PSP_DEVINFO_DATA devInfo,
-                    PSP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail)
+void restart_device(const HDEVINFO devs,
+                    const PSP_DEVINFO_DATA devInfo,
+                    const PSP_DEVINFO_LIST_DETAIL_DATA devInfoListDetail)
 {
     SP_PROPCHANGE_PARAMS pcp;
     SP_DEVINSTALL_PARAMS devParams;
@@ -415,7 +417,7 @@ static void foreach_host_controller(
     }
 
     devInfo.cbSize = sizeof(devInfo);
-    for (devIndex = 0; SetupDiEnumDeviceInfo(devs, devIndex, &devInfo); devIndex++)
+    for (devIndex = 0U; SetupDiEnumDeviceInfo(devs, devIndex, &devInfo); ++devIndex)
     {
         callback(devs, &devInfo, &devInfoListDetail);
     }

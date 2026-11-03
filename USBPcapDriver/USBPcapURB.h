@@ -9,7 +9,7 @@
 
 #include "USBPcapMain.h"
 
-VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
+VOID USBPcapAnalyzeURB(const PIRP pIrp, const PURB pUrb, const BOOLEAN post,
                        PUSBPCAP_DEVICE_DATA pDeviceData);
 
 #endif /* USBPCAP_URB_H */

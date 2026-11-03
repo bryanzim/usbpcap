@@ -4,14 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "thread.h"
+
+#include "USBPcap.h"
+#include "descriptors.h"
+#include "iocontrol.h"
+
 #include <devioctl.h>
+#include <wtypes.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <wtypes.h>
-#include "USBPcap.h"
-#include "thread.h"
-#include "iocontrol.h"
-#include "descriptors.h"
 
 HANDLE create_filter_read_handle(struct thread_data* data)
 {
@@ -107,8 +110,8 @@ finish:
     return INVALID_HANDLE_VALUE;
 }
 
-static void write_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
-                       void* buffer, DWORD bytes)
+static void write_data(struct thread_data* const data, const LPOVERLAPPED write_overlapped,
+                       void* const buffer, const DWORD bytes)
 {
     /* Write data to the end of the file. */
     write_overlapped->Offset = 0xFFFFFFFF;
@@ -140,7 +143,7 @@ static void write_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
     ResetEvent(write_overlapped->hEvent);
 }
 
-static void process_data(struct thread_data* data, LPOVERLAPPED write_overlapped,
+static void process_data(struct thread_data* data, const LPOVERLAPPED write_overlapped,
                          unsigned char* buffer, DWORD bytes)
 {
     if (data->descriptors.buf_written < sizeof(pcap_hdr_t))
@@ -165,7 +168,7 @@ static void process_data(struct thread_data* data, LPOVERLAPPED write_overlapped
         buffer += to_write;
         bytes -= to_write;
 
-        if (bytes == 0)
+        if (bytes == 0U)
         {
             /* Nothing more to write */
             return;
@@ -174,7 +177,7 @@ static void process_data(struct thread_data* data, LPOVERLAPPED write_overlapped
     write_data(data, write_overlapped, buffer, bytes);
 }
 
-DWORD WINAPI read_thread(LPVOID param)
+DWORD WINAPI read_thread(const LPVOID param)
 {
     struct thread_data* data = (struct thread_data*)param;
     unsigned char* buffer;
@@ -232,28 +235,28 @@ DWORD WINAPI read_thread(LPVOID param)
                                                       FALSE /* Default non signaled */,
                                                       NULL /* No name */);
     table[table_count] = read_overlapped.hEvent;
-    table_count++;
+    ++table_count;
     table[table_count] = write_overlapped.hEvent;
-    table_count++;
+    ++table_count;
     if (GetFileType(data->write_handle) == FILE_TYPE_PIPE)
     {
         /* Setup dummy reads from write handle so we can detect broken pipe
          * even ifthere isn't any data read from read handle.
          */
         table[table_count] = write_handle_read_overlapped.hEvent;
-        table_count++;
+        ++table_count;
         ReadFile(data->write_handle, &dummy_buf, sizeof(dummy_buf), NULL, &write_handle_read_overlapped);
     }
     if (data->exit_event != INVALID_HANDLE_VALUE)
     {
         table[table_count] = data->exit_event;
-        table_count++;
+        ++table_count;
     }
 
     if (GetFileType(data->read_handle) == FILE_TYPE_PIPE)
     {
         table[table_count] = connect_overlapped.hEvent;
-        table_count++;
+        ++table_count;
         if (!ConnectNamedPipe(data->read_handle, &connect_overlapped))
         {
             err = GetLastError();
@@ -278,7 +281,7 @@ DWORD WINAPI read_thread(LPVOID param)
                                     FALSE,
                                     INFINITE);
 #pragma warning(default : 4296)
-        if ((dw >= WAIT_OBJECT_0) && dw < (WAIT_OBJECT_0 + table_count))
+        if ((dw >= WAIT_OBJECT_0) && (dw < (WAIT_OBJECT_0 + table_count)))
         {
             int i = dw - WAIT_OBJECT_0;
             if (table[i] == read_overlapped.hEvent)

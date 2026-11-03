@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapHelperFunctions.h"
-#include "USBPcapTables.h"
+#include "USBPcapMain.h"
 #include "USBPcapRootHubControl.h"
+#include "USBPcapTables.h"
 
 /*
  * Frees pDevExt.context.usb.pDeviceData
  */
-static void USBPcapFreeDeviceData(IN PDEVICE_EXTENSION pDevExt)
+static void USBPcapFreeDeviceData(IN const PDEVICE_EXTENSION pDevExt)
 {
     PUSBPCAP_DEVICE_DATA pDeviceData;
 
@@ -80,8 +80,8 @@ static void USBPcapFreeDeviceData(IN PDEVICE_EXTENSION pDevExt)
 /*
  * Allocates USBPCAP_DEVICE_DATA.
  */
-static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
-                                          IN PDEVICE_EXTENSION pParentDevExt)
+static NTSTATUS USBPcapAllocateDeviceData(IN const PDEVICE_EXTENSION pDevExt,
+                                          IN const PDEVICE_EXTENSION pParentDevExt)
 {
     PUSBPCAP_DEVICE_DATA pDeviceData;
     NTSTATUS status = STATUS_SUCCESS;
@@ -188,7 +188,7 @@ static NTSTATUS USBPcapAllocateDeviceData(IN PDEVICE_EXTENSION pDevExt,
     return status;
 }
 
-static ULONG GetDeviceTypeToUse(PDEVICE_OBJECT pdo)
+static ULONG GetDeviceTypeToUse(const PDEVICE_OBJECT pdo)
 {
     PDEVICE_OBJECT ldo = IoGetAttachedDeviceReference(pdo);
     ULONG devtype = FILE_DEVICE_UNKNOWN;
@@ -206,7 +206,7 @@ static ULONG GetDeviceTypeToUse(PDEVICE_OBJECT pdo)
 // Functions to attach and detach USB Root HUB filter
 #pragma prefast(suppress : 28152, "Suppress 28152 for path where filter was not created. Please remove this suppression after doing any changes to AddDevice()!")
 NTSTATUS AddDevice(IN PDRIVER_OBJECT pDrvObj,
-                   IN PDEVICE_OBJECT pTgtDevObj)
+                   IN const PDEVICE_OBJECT pTgtDevObj)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     UNICODE_STRING usTgtName;
@@ -291,7 +291,7 @@ EndFunc:
     return ntStat;
 }
 
-VOID DkDetachAndDeleteHubFilt(PDEVICE_EXTENSION pDevExt)
+VOID DkDetachAndDeleteHubFilt(const PDEVICE_EXTENSION pDevExt)
 {
     NTSTATUS status;
     if (pDevExt->parentRemoveLock)
@@ -315,7 +315,7 @@ VOID DkDetachAndDeleteHubFilt(PDEVICE_EXTENSION pDevExt)
 ////////////////////////////////////////////////////////////////////////////
 // Functions to attach and detach target device object
 //
-NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pParentDevExt, PDEVICE_OBJECT pTgtDevObj)
+NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pParentDevExt, const PDEVICE_OBJECT pTgtDevObj)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_OBJECT pDeviceObject = NULL;
@@ -383,7 +383,7 @@ EndAttDev:
     return ntStat;
 }
 
-VOID DkDetachAndDeleteTgt(PDEVICE_EXTENSION pDevExt)
+VOID DkDetachAndDeleteTgt(const PDEVICE_EXTENSION pDevExt)
 {
     PUSBPCAP_DEVICE_DATA pDeviceData = pDevExt->context.usb.pDeviceData;
 
@@ -408,7 +408,7 @@ VOID DkDetachAndDeleteTgt(PDEVICE_EXTENSION pDevExt)
 //////////////////////////////////////////////////////////////////////////
 // Function to get USB Root Hub device name, e.g., \Device\USBPDO-4
 //
-NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
+NTSTATUS DkGetHubDevName(const PIO_STACK_LOCATION pStack, const PIRP pIrp, PULONG pUlRes)
 {
     NTSTATUS ntStat = STATUS_SUCCESS, clStat = STATUS_SUCCESS;
     HANDLE hObj;
@@ -421,10 +421,10 @@ NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes)
 
     inputLength = pStack->Parameters.DeviceIoControl.InputBufferLength;
     outputLength = pStack->Parameters.DeviceIoControl.OutputBufferLength;
-    if (pIrp->AssociatedIrp.SystemBuffer == NULL ||
-        inputLength < sizeof(WCHAR) ||
-        inputLength > UNICODE_STRING_MAX_BYTES ||
-        (inputLength % sizeof(WCHAR)) != 0)
+    if ((pIrp->AssociatedIrp.SystemBuffer == NULL) ||
+        ((inputLength < sizeof(WCHAR))) ||
+        ((inputLength > UNICODE_STRING_MAX_BYTES)) ||
+        ((inputLength % sizeof(WCHAR)) != 0))
     {
         return STATUS_INVALID_PARAMETER;
     }

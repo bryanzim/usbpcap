@@ -36,7 +36,7 @@ WINGETOPT_API extern int opterr; /* flag to enable built-in diagnostics... */
 
 WINGETOPT_API extern char* optarg; /* pointer to argument of current option  */
 
-extern int getopt(int nargc, char* const* nargv, const char* options);
+extern int getopt(const int nargc, char* const* nargv, const char* options);
 
 #ifdef _BSD_SOURCE
 /*
@@ -84,10 +84,10 @@ enum /* permitted values for its `has_arg' field...	*/
     optional_argument  /* option may take an argument		*/
 };
 
-extern int getopt_long(int nargc, char* const* nargv, const char* options,
-                       const struct option* long_options, int* idx);
-extern int getopt_long_only(int nargc, char* const* nargv, const char* options,
-                            const struct option* long_options, int* idx);
+extern int getopt_long(const int nargc, char* const* nargv, const char* options,
+                       const struct option* long_options, int* const idx);
+extern int getopt_long_only(const int nargc, char* const* nargv, const char* options,
+                            const struct option* long_options, int* const idx);
 /*
  * Previous MinGW implementation had...
  */

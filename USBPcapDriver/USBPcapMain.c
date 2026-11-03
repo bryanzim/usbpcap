@@ -12,7 +12,7 @@
  */
 volatile LONG g_controlId;
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
+NTSTATUS DriverEntry(const PDRIVER_OBJECT pDrvObj, const PUNICODE_STRING pUsRegPath)
 {
     UCHAR ucCnt = 0U;
 
@@ -28,7 +28,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
     pDrvObj->DriverUnload = DkUnload;
     pDrvObj->DriverExtension->AddDevice = AddDevice;
 
-    for (ucCnt = 0; ucCnt <= IRP_MJ_MAXIMUM_FUNCTION; ucCnt++)
+    for (ucCnt = 0U; ucCnt <= IRP_MJ_MAXIMUM_FUNCTION; ++ucCnt)
     {
         pDrvObj->MajorFunction[ucCnt] = DkDefault;
     }
@@ -53,19 +53,19 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pUsRegPath)
     return STATUS_SUCCESS;
 }
 
-VOID DkUnload(PDRIVER_OBJECT pDrvObj)
+VOID DkUnload(const PDRIVER_OBJECT pDrvObj)
 {
     DkDbgStr("2");
 }
 
-VOID DkCompleteRequest(PIRP pIrp, NTSTATUS resStat, UINT_PTR uiInfo)
+VOID DkCompleteRequest(const PIRP pIrp, const NTSTATUS resStat, const UINT_PTR uiInfo)
 {
     pIrp->IoStatus.Status = resStat;
     pIrp->IoStatus.Information = uiInfo;
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 }
 
-NTSTATUS DkDefault(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkDefault(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -107,7 +107,7 @@ NTSTATUS DkDefault(PDEVICE_OBJECT pDevObj, PIRP pIrp)
     return ntStat;
 }
 
-NTSTATUS DkForwardAndWait(PDEVICE_OBJECT pNextDevObj, PIRP pIrp)
+NTSTATUS DkForwardAndWait(const PDEVICE_OBJECT pNextDevObj, const PIRP pIrp)
 {
     KEVENT kEvt;
     NTSTATUS ntStat = STATUS_SUCCESS;
@@ -130,7 +130,7 @@ NTSTATUS DkForwardAndWait(PDEVICE_OBJECT pNextDevObj, PIRP pIrp)
     return ntStat;
 }
 
-NTSTATUS DkGenCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
+NTSTATUS DkGenCompletion(const PDEVICE_OBJECT pDevObj, const PIRP pIrp, const PVOID pCtx)
 {
     PKEVENT pEvt = NULL;
 

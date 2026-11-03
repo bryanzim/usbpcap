@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapHelperFunctions.h"
+#include "USBPcapMain.h"
 #include "USBPcapRootHubControl.h"
 
-NTSTATUS DkPnP(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkPnP(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -56,7 +56,7 @@ NTSTATUS DkPnP(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 }
 
 
-NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp)
+NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
 
@@ -86,9 +86,9 @@ NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP 
         IoSkipCurrentIrpStackLocation(pIrp);
         ntStat = IoCallDriver(pDevExt->pNextDevObj, pIrp);
 
-        if (pDeviceData != NULL &&
-            pDeviceData->pRootData != NULL &&
-            pDeviceData->pRootData->controlDevice != NULL)
+        if ((pDeviceData != NULL) &&
+            ((pDeviceData->pRootData != NULL)) &&
+            (pDeviceData->pRootData->controlDevice != NULL))
         {
             USBPcapDeleteRootHubControlDevice(pDeviceData->pRootData->controlDevice);
         }
@@ -128,7 +128,7 @@ NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP 
     return ntStat;
 }
 
-NTSTATUS DkTgtPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp)
+NTSTATUS DkTgtPnP(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PUSBPCAP_DEVICE_DATA pDeviceData = pDevExt->context.usb.pDeviceData;
@@ -212,7 +212,7 @@ NTSTATUS DkTgtPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIr
     return ntStat;
 }
 
-NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp)
+NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_RELATIONS pDevRel = NULL;
@@ -248,7 +248,7 @@ NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATI
 
                 DkDbgVal("Child(s) number", pDevRel->Count);
 
-                for (i = 0; i < pDevRel->Count; i++)
+                for (i = 0U; i < pDevRel->Count; ++i)
                 {
                     PDEVICE_OBJECT* child;
                     BOOLEAN found = FALSE;
@@ -265,7 +265,7 @@ NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATI
                                 found = TRUE;
                                 break;
                             }
-                            child++;
+                            ++child;
                         }
                     }
 
@@ -296,7 +296,7 @@ NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATI
 
                     if (children != NULL)
                     {
-                        for (i = 0; i < pDevRel->Count; i++)
+                        for (i = 0U; i < pDevRel->Count; ++i)
                         {
                             children[i] = pDevRel->Objects[i];
                         }

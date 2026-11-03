@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapBuffer.h"
+#include "USBPcapMain.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // Create, close and clean up handlers
 //
-NTSTATUS DkCreateClose(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkCreateClose(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -29,8 +29,8 @@ NTSTATUS DkCreateClose(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 
     pStack = IoGetCurrentIrpStackLocation(pIrp);
 
-    if (pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB ||
-        pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE)
+    if ((pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB) ||
+        (pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE))
     {
         // Handling Create, Close and Cleanup request for Hub Filter and
         // target devices
@@ -112,7 +112,7 @@ NTSTATUS DkCreateClose(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 ////////////////////////////////////////////////////////////////////////////
 // Read and write request handlers
 //
-NTSTATUS DkReadWrite(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkReadWrite(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -129,8 +129,8 @@ NTSTATUS DkReadWrite(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 
     pStack = IoGetCurrentIrpStackLocation(pIrp);
 
-    if (pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB ||
-        pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE)
+    if ((pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB) ||
+        (pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE))
     {
         // Handling Read/Write request for Hub Filter object and
         // target devices
@@ -181,8 +181,8 @@ NTSTATUS DkReadWrite(PDEVICE_OBJECT pDevObj, PIRP pIrp)
      * STATUS_PENDING return from IoCallDriver still drops the lock.
      * Only a capture read queued on the control device holds it.
      */
-    if (ntStat != STATUS_PENDING ||
-        pDevExt->deviceMagic != USBPCAP_MAGIC_CONTROL)
+    if ((ntStat != STATUS_PENDING) ||
+        (pDevExt->deviceMagic != USBPCAP_MAGIC_CONTROL))
     {
         IoReleaseRemoveLock(&pDevExt->removeLock, (PVOID)pIrp);
     }

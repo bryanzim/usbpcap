@@ -6,7 +6,7 @@
 
 #include "USBPcapMain.h"
 
-NTSTATUS DkPower(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkPower(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;

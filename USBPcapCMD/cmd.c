@@ -7,20 +7,24 @@
 #define _CRT_SECURE_NO_DEPRECATE
 
 #include <initguid.h>
+
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+#include "USBPcap.h"
+#include "descriptors.h"
+#include "enum.h"
+#include "filters.h"
+#include "getopt.h"
+#include "roothubs.h"
+#include "thread.h"
+#include "version.h"
+
 #include <Shellapi.h>
 #include <Shlwapi.h>
 #include <Usbiodef.h>
-#include "filters.h"
-#include "thread.h"
-#include "enum.h"
-#include "getopt.h"
-#include "roothubs.h"
-#include "version.h"
-#include "descriptors.h"
-#include "USBPcap.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #define INPUT_BUFFER_SIZE 1024
 
@@ -108,8 +112,8 @@ static BOOL IsElevated()
  *                            the buffer to the module's file name only.  This parameter may be
  *                            NULL if the file name is not required.
  */
-EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuffer,
-                                      __in int nMaxChars, __out LPWSTR* ppszFileName)
+EXTERN_C int WINAPI GetModuleFullName(__in const HMODULE hModule, __out LPWSTR pszBuffer,
+                                      __in const int nMaxChars, __out LPWSTR* ppszFileName)
 {
     /* Determine required buffer size when requested */
     int nLength = 0;
@@ -118,11 +122,11 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
     /* Validate parameters */
     if (dwStatus == NO_ERROR)
     {
-        if (pszBuffer == NULL && (nMaxChars != 0 || ppszFileName != NULL))
+        if ((pszBuffer == NULL) && ((nMaxChars != 0) || (ppszFileName != NULL)))
         {
             dwStatus = ERROR_INVALID_PARAMETER;
         }
-        else if (pszBuffer != NULL && nMaxChars < 1)
+        else if ((pszBuffer != NULL) && (nMaxChars < 1))
         {
             dwStatus = ERROR_INVALID_PARAMETER;
         }
@@ -147,7 +151,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
                 /* Try to get the module's full path and file name */
                 dwLength = GetModuleFileNameW(hModule, pszBuffer, dwMaxChars);
 
-                if (dwLength == 0)
+                if (dwLength == 0U)
                 {
                     dwStatus = GetLastError();
                     break;
@@ -227,7 +231,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
         {
             nLength = (int)GetModuleFileNameW(hModule, pszBuffer, nMaxChars);
 
-            if (nLength <= 0 || nLength == nMaxChars)
+            if ((nLength <= 0) || (nLength == nMaxChars))
             {
                 dwStatus = GetLastError();
             }
@@ -238,7 +242,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
 
                 for (pszItr = pszBuffer; *pszItr != L'\0'; ++pszItr)
                 {
-                    if (*pszItr == L'\\' || *pszItr == L'/')
+                    if ((*pszItr == L'\\') || (*pszItr == L'/'))
                     {
                         *ppszFileName = pszItr + 1;
                     }
@@ -269,7 +273,7 @@ EXTERN_C int WINAPI GetModuleFullName(__in HMODULE hModule, __out LPWSTR pszBuff
  *
  * \return BOOL TRUE on success, FALSE otherwise.
  */
-static BOOL generate_worker_command_line(struct thread_data* data,
+static BOOL generate_worker_command_line(struct thread_data* const data,
                                          PWSTR* appPath,
                                          PWSTR* appCmdLine,
                                          HANDLE* pcap_handle)
@@ -307,7 +311,7 @@ static BOOL generate_worker_command_line(struct thread_data* data,
             return FALSE;
         }
         swprintf_s(pipeName, nChars, L"\\\\.\\pipe\\%S", data->device);
-        for (tmp = &pipeName[sizeof("\\\\.\\pipe\\")]; *tmp; tmp++)
+        for (tmp = &pipeName[sizeof("\\\\.\\pipe\\")]; *tmp; ++tmp)
         {
             if (*tmp == L'\\')
             {
@@ -452,7 +456,7 @@ static BOOL generate_worker_command_line(struct thread_data* data,
  *
  *  \return Handle to created process.
  */
-static HANDLE create_elevated_worker(PWSTR appPath, PWSTR cmdLine)
+static HANDLE create_elevated_worker(const PWSTR appPath, const PWSTR cmdLine)
 {
     BOOL bSuccess = FALSE;
     SHELLEXECUTEINFOW exInfo = { 0 };
@@ -494,7 +498,7 @@ static HANDLE create_elevated_worker(PWSTR appPath, PWSTR cmdLine)
  *
  *  \return Handle to created process.
  */
-static HANDLE create_breakaway_worker_in_job(struct thread_data* data, PWSTR appPath, PWSTR appCmdLine)
+static HANDLE create_breakaway_worker_in_job(struct thread_data* const data, const PWSTR appPath, const PWSTR appCmdLine)
 {
     HANDLE process = INVALID_HANDLE_VALUE;
     STARTUPINFOW startupInfo;
@@ -568,7 +572,7 @@ static HANDLE create_breakaway_worker_in_job(struct thread_data* data, PWSTR app
     return process;
 }
 
-int cmd_interactive(struct thread_data* data)
+int cmd_interactive(struct thread_data* const data)
 {
     int i = 0;
     int max_i;
@@ -660,7 +664,7 @@ int cmd_interactive(struct thread_data* data)
     {
         printf("%d %s\n", i + 1, usbpcapFilters[i]->device);
         enumerate_print_usbpcap_interactive(usbpcapFilters[i]->device);
-        i++;
+        ++i;
     }
 
     max_i = i;
@@ -684,7 +688,7 @@ int cmd_interactive(struct thread_data* data)
             {
                 int value = atoi(buffer);
 
-                if (value <= 0 || value > max_i)
+                if ((value <= 0) || (value > max_i))
                 {
                     printf("Invalid input\n");
                 }
@@ -717,7 +721,7 @@ int cmd_interactive(struct thread_data* data)
         }
         else
         {
-            for (i = 0; i < INPUT_BUFFER_SIZE; i++)
+            for (i = 0; i < INPUT_BUFFER_SIZE; ++i)
             {
                 if (buffer[i] == '\n')
                 {
@@ -743,7 +747,7 @@ int cmd_interactive(struct thread_data* data)
  * \param[in] process Worker process handle
  *                    INVALID_HANDLE_VALUE if not using elevated worker.
  */
-static void wait_for_exit_signal(struct thread_data* data, HANDLE process)
+static void wait_for_exit_signal(struct thread_data* const data, const HANDLE process)
 {
     HANDLE handle_table[3U] = { INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE };
     HANDLE stdin_handle = GetStdHandle(STD_INPUT_HANDLE);
@@ -757,20 +761,20 @@ static void wait_for_exit_signal(struct thread_data* data, HANDLE process)
         if (dw != WAIT_FAILED)
         {
             handle_table[count] = stdin_handle;
-            count++;
+            ++count;
         }
     }
 
     if ((data->exit_event != NULL) && (data->exit_event != INVALID_HANDLE_VALUE))
     {
         handle_table[count] = data->exit_event;
-        count++;
+        ++count;
     }
 
     if ((process != NULL) && (process != INVALID_HANDLE_VALUE))
     {
         handle_table[count] = process;
-        count++;
+        ++count;
     }
 
     if (count == 0)
@@ -783,7 +787,7 @@ static void wait_for_exit_signal(struct thread_data* data, HANDLE process)
     {
         dw = WaitForMultipleObjects(count, handle_table, FALSE, INFINITE);
 #pragma warning(default : 4296)
-        if ((dw >= WAIT_OBJECT_0) && dw < (WAIT_OBJECT_0 + count))
+        if ((dw >= WAIT_OBJECT_0) && (dw < (WAIT_OBJECT_0 + count)))
         {
             int i = dw - WAIT_OBJECT_0;
             if (handle_table[i] == stdin_handle)
@@ -1134,12 +1138,12 @@ static void print_extcap_interfaces(void)
         }
         else
         {
-            tmp++;
+            ++tmp;
         }
 
         printf("interface {value=%s}{display=%s}\n",
                usbpcapFilters[i]->device, tmp);
-        i++;
+        ++i;
     }
 
     filters_free();
@@ -1195,7 +1199,7 @@ static const char* wireshark_version = NULL;
 static const char* extcap_interface = NULL;
 static const char* extcap_fifo = NULL;
 
-int cmd_extcap(struct thread_data* data)
+int cmd_extcap(struct thread_data* const data)
 {
     int ret = -1;
 
@@ -1253,7 +1257,7 @@ int cmd_extcap(struct thread_data* data)
     return ret;
 }
 
-BOOLEAN IsHandleRedirected(DWORD handle)
+BOOLEAN IsHandleRedirected(const DWORD handle)
 {
     HANDLE h = GetStdHandle(handle);
     if (h)
@@ -1446,7 +1450,7 @@ int __cdecl main(int argc, CHAR** argv)
         case 'b': /* --bufferlen */
             data.bufferlen = atol(optarg);
             /* Minimum buffer size if 4 KiB, maximum 128 MiB */
-            if (data.bufferlen < 4096 || data.bufferlen > 134217728)
+            if ((data.bufferlen < 4096) || (data.bufferlen > 134217728))
             {
                 fprintf(stderr, "Invalid buffer length! "
                                 "Valid range <4096,134217728>.\n");
@@ -1556,10 +1560,10 @@ int __cdecl main(int argc, CHAR** argv)
 }
 
 #if _MSC_VER >= 1700
-int CALLBACK WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR lpCmdLine,
-                     int nCmdShow)
+int CALLBACK WinMain(const HINSTANCE hInstance,
+                     const HINSTANCE hPrevInstance,
+                     const LPSTR lpCmdLine,
+                     const int nCmdShow)
 {
     return usbpcapcmd_main(__argc, __argv);
 }

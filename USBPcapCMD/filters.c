@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "filters.h"
+
 #include <windows.h>
+
+#include <tchar.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <tchar.h>
-#include "filters.h"
 
 struct filters** usbpcapFilters = NULL;
 
@@ -139,7 +142,7 @@ static BOOL init_undocumented()
  *
  * Returns TRUE on success, FALSE otherwise
  */
-static BOOL find_usbpcap_filters(struct list* list,
+static BOOL find_usbpcap_filters(struct list* const list,
                                  void (*callback)(struct list* list,
                                                   PUNICODE_STRING str))
 {
@@ -162,8 +165,8 @@ static BOOL find_usbpcap_filters(struct list* list,
                                NULL,  /* No Root Directory */
                                NULL); /* No Security Descriptor */
 
-    index = 0;
-    written = 0;
+    index = 0U;
+    written = 0U;
 
     info = (POBJDIR_INFORMATION)HeapAlloc(GetProcessHeap(),
                                           0,
@@ -218,7 +221,7 @@ static BOOL find_usbpcap_filters(struct list* list,
     return TRUE;
 }
 
-static void list_insert(struct list* list, struct list_entry* entry)
+static void list_insert(struct list* list, struct list_entry* const entry)
 {
     if (list->head == NULL)
     {
@@ -230,11 +233,11 @@ static void list_insert(struct list* list, struct list_entry* entry)
     {
         list->tail->next = entry;
         list->tail = entry;
-        list->count++;
+        ++list->count;
     }
 }
 
-static void list_free(struct list* list, BOOL free_data)
+static void list_free(struct list* const list, const BOOL free_data)
 {
     struct list_entry* entry;
     struct list_entry* next;
@@ -256,8 +259,8 @@ static void list_free(struct list* list, BOOL free_data)
     list->count = 0;
 }
 
-static void add_to_list(struct list* list,
-                        PUNICODE_STRING str)
+static void add_to_list(struct list* const list,
+                        const PUNICODE_STRING str)
 {
     char* device;
     const char* prefix = "\\\\.\\";
@@ -269,12 +272,12 @@ static void add_to_list(struct list* list,
     len = str->Length / sizeof(WCHAR);
     device = malloc(len + 1 + prefix_len);
 
-    for (i = 0; i < prefix_len; i++)
+    for (i = 0; i < prefix_len; ++i)
     {
         device[i] = prefix[i];
     }
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; ++i)
     {
         device[i + prefix_len] = (char)str->Buffer[i];
     }
@@ -302,7 +305,7 @@ void filters_initialize()
 
     usbpcapFilters = (struct filters**)malloc(sizeof(struct filters*) * (list.count + 1));
     entry = list.head;
-    for (i = 0; i < list.count && entry != NULL; i++)
+    for (i = 0; (i < list.count) && (entry != NULL); ++i)
     {
         usbpcapFilters[i] = (struct filters*)malloc(sizeof(struct filters));
         usbpcapFilters[i]->device = entry->device;
@@ -327,7 +330,7 @@ void filters_free()
     {
         free(usbpcapFilters[i]->device);
         free(usbpcapFilters[i]);
-        i++;
+        ++i;
     }
     free(usbpcapFilters);
 }
@@ -393,11 +396,11 @@ BOOL is_usbpcap_upper_filter_installed()
     /* i walks over multisz, j walks over lookup.
      * j starts from 1 as the multisz does not start with '\0'.
      */
-    for (i = 0, j = 1; i < length; i++)
+    for (i = 0, j = 1; i < length; ++i)
     {
         if (multisz[i] == lookup[j])
         {
-            j++;
+            ++j;
             if (j == 9) /* whole lookup string */
             {
                 free(multisz);

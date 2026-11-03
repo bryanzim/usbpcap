@@ -7,19 +7,23 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "enum.h"
+
 #include <windows.h>
-#include <winioctl.h>
+
+#include "USBPcap.h"
+
 #include <Cfgmgr32.h>
-#include <usbioctl.h>
 #include <fcntl.h>
 #include <io.h>
 #include <setupapi.h>
+#include <tchar.h>
+#include <usbioctl.h>
+#include <winioctl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tchar.h>
-#include "USBPcap.h"
-#include "enum.h"
 
 /*
  * level - Tree depth level
@@ -49,7 +53,7 @@ typedef void (*EnumDeviceInfoCallback)(ULONG level, ULONG port, TCHAR display[MA
  */
 #define LOOP_SANITY_LIMIT 10000
 
-void wide_print(LPCWSTR string)
+void wide_print(const LPCWSTR string)
 {
     HANDLE std_out;
     BOOL console_output;
@@ -130,29 +134,29 @@ fallback:
 }
 
 static void EnumerateHub(PTSTR hub,
-                         PUSB_NODE_CONNECTION_INFORMATION connection_info,
-                         ULONG level,
-                         EnumDeviceInfoCallback callback,
-                         EnumConnectedPortCallback port_callback, void* port_ctx);
+                         const PUSB_NODE_CONNECTION_INFORMATION connection_info,
+                         const ULONG level,
+                         const EnumDeviceInfoCallback callback,
+                         const EnumConnectedPortCallback port_callback, void* const port_ctx);
 
 static void print_indent(ULONG level)
 {
     /* Sanity check level to avoid printing a lot of spaces */
-    if (level > 20)
+    if (level > 20U)
     {
         printf("*** Warning: Device tree might be incorrectly formatted. ***\n");
         return;
     }
 
-    while (level > 0)
+    while (level > 0U)
     {
         /* Print two spaces per level */
         printf("  ");
-        level--;
+        --level;
     }
 }
 
-static PSTR WideStrToUTF8(__in LPCWSTR WideStr)
+static PSTR WideStrToUTF8(__in const LPCWSTR WideStr)
 {
     ULONG nBytes;
     PTSTR MultiStr;
@@ -161,7 +165,7 @@ static PSTR WideStrToUTF8(__in LPCWSTR WideStr)
     nBytes = WideCharToMultiByte(CP_UTF8, 0, WideStr, -1,
                                  NULL, 0, NULL, NULL);
 
-    if (nBytes == 0)
+    if (nBytes == 0U)
     {
         return NULL;
     }
@@ -178,7 +182,7 @@ static PSTR WideStrToUTF8(__in LPCWSTR WideStr)
     nBytes = WideCharToMultiByte(CP_UTF8, 0, WideStr, -1,
                                  MultiStr, nBytes, NULL, NULL);
 
-    if (nBytes == 0)
+    if (nBytes == 0U)
     {
         GlobalFree(MultiStr);
         return NULL;
@@ -187,7 +191,7 @@ static PSTR WideStrToUTF8(__in LPCWSTR WideStr)
     return MultiStr;
 }
 
-static PTSTR WideStrToMultiStr(__in LPCWSTR WideStr)
+static PTSTR WideStrToMultiStr(__in const LPCWSTR WideStr)
 {
     // Is there a better way to do this?
 #if defined(_UNICODE) //  If this is built for UNICODE, just clone the input
@@ -211,7 +215,7 @@ static PTSTR WideStrToMultiStr(__in LPCWSTR WideStr)
     nBytes = WideCharToMultiByte(CP_ACP, 0, WideStr, -1,
                                  NULL, 0, NULL, NULL);
 
-    if (nBytes == 0)
+    if (nBytes == 0U)
     {
         return NULL;
     }
@@ -228,7 +232,7 @@ static PTSTR WideStrToMultiStr(__in LPCWSTR WideStr)
     nBytes = WideCharToMultiByte(CP_ACP, 0, WideStr, -1,
                                  MultiStr, nBytes, NULL, NULL);
 
-    if (nBytes == 0)
+    if (nBytes == 0U)
     {
         GlobalFree(MultiStr);
         return NULL;
@@ -238,9 +242,9 @@ static PTSTR WideStrToMultiStr(__in LPCWSTR WideStr)
 #endif
 }
 
-void print_usbpcapcmd(ULONG level, ULONG port, TCHAR display[MAX_DEVICE_ID_LEN],
-                      USHORT deviceAddress, USHORT parentAddress,
-                      ULONG node, ULONG parentNode)
+void print_usbpcapcmd(const ULONG level, const ULONG port, TCHAR display[MAX_DEVICE_ID_LEN],
+                      const USHORT deviceAddress, const USHORT parentAddress,
+                      const ULONG node, const ULONG parentNode)
 {
     (void)deviceAddress;
     (void)parentAddress;
@@ -255,9 +259,9 @@ void print_usbpcapcmd(ULONG level, ULONG port, TCHAR display[MAX_DEVICE_ID_LEN],
     printf("\n");
 }
 
-void print_extcap_config(ULONG level, ULONG port, TCHAR display[MAX_DEVICE_ID_LEN],
-                         USHORT deviceAddress, USHORT parentAddress,
-                         ULONG node, ULONG parentNode)
+void print_extcap_config(const ULONG level, const ULONG port, TCHAR display[MAX_DEVICE_ID_LEN],
+                         const USHORT deviceAddress, const USHORT parentAddress,
+                         const ULONG node, const ULONG parentNode)
 {
     PTSTR str = WideStrToUTF8((LPCWSTR)display);
 
@@ -287,7 +291,7 @@ void print_extcap_config(ULONG level, ULONG port, TCHAR display[MAX_DEVICE_ID_LE
     GlobalFree(str);
 }
 
-static PTSTR GetDriverKeyName(HANDLE Hub, ULONG ConnectionIndex)
+static PTSTR GetDriverKeyName(const HANDLE Hub, ULONG ConnectionIndex)
 {
     BOOL success;
     ULONG nBytes;
@@ -373,7 +377,7 @@ GetDriverKeyNameError:
     return NULL;
 }
 
-static PTSTR GetExternalHubName(HANDLE Hub, ULONG ConnectionIndex)
+static PTSTR GetExternalHubName(const HANDLE Hub, ULONG ConnectionIndex)
 {
     BOOL success;
     ULONG nBytes;
@@ -490,7 +494,7 @@ static BOOL stack_pop(Stack** stack, USHORT* ret_val)
  *  Peeks value from stack without removing it.
  *  Returns TRUE on success, FALSE otherwise.
  */
-static BOOL stack_peek(Stack** stack, USHORT* ret_val)
+static BOOL stack_peek(Stack** const stack, USHORT* ret_val)
 {
     if (*stack == NULL)
     {
@@ -525,8 +529,8 @@ static BOOL stack_push(Stack** stack, USHORT value)
 
 
 
-static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
-                                 USHORT deviceAddress, EnumDeviceInfoCallback callback)
+static VOID PrintDevinstChildren(const DEVINST parent, const ULONG indent,
+                                 const USHORT deviceAddress, const EnumDeviceInfoCallback callback)
 {
     DEVINST current;
     DEVINST next;
@@ -546,7 +550,7 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
     if (cr == CR_SUCCESS)
     {
         current = next;
-        level++;
+        ++level;
         stack_push(&nodeStack, parentNode);
     }
 
@@ -581,11 +585,11 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                                                    0);
         }
 
-        if (cr == CR_SUCCESS && (((PWSTR)buf)[0U] != L'\0'))
+        if ((cr == CR_SUCCESS) && (((PWSTR)buf)[0U] != L'\0'))
         {
             if (!stack_peek(&nodeStack, &parentNode))
             {
-                parentNode = 0;
+                parentNode = 0U;
             }
             callback(level, 0, buf, deviceAddress, deviceAddress, nextNode, parentNode);
         }
@@ -596,9 +600,9 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
         if (cr == CR_SUCCESS)
         {
             current = next;
-            level++;
+            ++level;
             stack_push(&nodeStack, nextNode);
-            nextNode++;
+            ++nextNode;
             continue;
         }
 
@@ -613,7 +617,7 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
             if (cr == CR_SUCCESS)
             {
                 current = next;
-                nextNode++;
+                ++nextNode;
                 break;
             }
             else if (cr == CR_NO_SUCH_DEVNODE)
@@ -623,9 +627,9 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
                 if (cr == CR_SUCCESS)
                 {
                     current = next;
-                    level--;
+                    --level;
                     stack_pop(&nodeStack, &parentNode);
-                    if (current == parent || level == indent)
+                    if ((current == parent) || (level == indent))
                     {
                         /* We went back to the parent, explicitly return here */
                         return;
@@ -648,10 +652,10 @@ static VOID PrintDevinstChildren(DEVINST parent, ULONG indent,
     }
 }
 
-VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
-                     ULONG Level, BOOLEAN PrintAllChildren,
-                     USHORT deviceAddress, USHORT parentAddress,
-                     EnumDeviceInfoCallback callback)
+VOID PrintDeviceDesc(__in const PCTSTR DriverName, const ULONG Index,
+                     const ULONG Level, const BOOLEAN PrintAllChildren,
+                     const USHORT deviceAddress, const USHORT parentAddress,
+                     const EnumDeviceInfoCallback callback)
 {
     DEVINST devInst;
     DEVINST devInstNext;
@@ -768,7 +772,7 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
                 }
                 else
                 {
-                    walkDone = 1;
+                    walkDone = 1U;
                     break;
                 }
             }
@@ -782,9 +786,9 @@ VOID PrintDeviceDesc(__in PCTSTR DriverName, ULONG Index,
 }
 
 static VOID
-EnumerateHubPorts(HANDLE hHubDevice, UCHAR NumPorts, ULONG level,
-                  USHORT hubAddress, EnumDeviceInfoCallback print_callback,
-                  EnumConnectedPortCallback port_callback, void* port_ctx)
+EnumerateHubPorts(const HANDLE hHubDevice, const UCHAR NumPorts, const ULONG level,
+                  const USHORT hubAddress, const EnumDeviceInfoCallback print_callback,
+                  const EnumConnectedPortCallback port_callback, void* const port_ctx)
 {
     ULONG index;
     BOOL success;
@@ -794,7 +798,7 @@ EnumerateHubPorts(HANDLE hHubDevice, UCHAR NumPorts, ULONG level,
     // Loop over all ports of the hub.
     //
     // Port indices are 1 based, not 0 based.
-    for (index = 1; index <= NumPorts; index++)
+    for (index = 1U; index <= NumPorts; ++index)
     {
         USB_NODE_CONNECTION_INFORMATION connectionInfo;
         ULONG nBytes;
@@ -868,10 +872,10 @@ EnumerateHubPorts(HANDLE hHubDevice, UCHAR NumPorts, ULONG level,
 
 
 static void EnumerateHub(PTSTR hub,
-                         PUSB_NODE_CONNECTION_INFORMATION connection_info,
-                         ULONG level,
-                         EnumDeviceInfoCallback print_callback,
-                         EnumConnectedPortCallback port_callback, void* port_ctx)
+                         const PUSB_NODE_CONNECTION_INFORMATION connection_info,
+                         const ULONG level,
+                         const EnumDeviceInfoCallback print_callback,
+                         const EnumConnectedPortCallback port_callback, void* const port_ctx)
 {
     PUSB_NODE_INFORMATION hubInfo;
     HANDLE hHubDevice;
@@ -989,8 +993,8 @@ EnumerateHubError:
  */
 static DWORD
 get_usbpcap_filter_hub_symlink(const char* filter,
-                               WCHAR* outBuf,
-                               DWORD outBufSize)
+                               WCHAR* const outBuf,
+                               const DWORD outBufSize)
 {
     HANDLE filter_handle;
     DWORD bytes_ret = 0U;
@@ -1018,7 +1022,7 @@ get_usbpcap_filter_hub_symlink(const char* filter,
                          &bytes_ret,
                          0))
     {
-        bytes_ret = 0;
+        bytes_ret = 0U;
     }
 
     CloseHandle(filter_handle);
@@ -1031,7 +1035,7 @@ void enumerate_print_usbpcap_interactive(const char* filter)
     DWORD bytes_ret;
 
     bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
-    if (bytes_ret > 0)
+    if (bytes_ret > 0U)
     {
         PTSTR str;
 
@@ -1051,7 +1055,7 @@ void enumerate_print_extcap_config(const char* filter)
     DWORD bytes_ret;
 
     bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
-    if (bytes_ret > 0)
+    if (bytes_ret > 0U)
     {
         PTSTR str;
 
@@ -1061,13 +1065,13 @@ void enumerate_print_extcap_config(const char* filter)
     }
 }
 
-void enumerate_all_connected_devices(const char* filter, EnumConnectedPortCallback cb, void* ctx)
+void enumerate_all_connected_devices(const char* filter, const EnumConnectedPortCallback cb, void* const ctx)
 {
     WCHAR outBuf[IOCTL_OUTPUT_BUFFER_SIZE];
     DWORD bytes_ret;
 
     bytes_ret = get_usbpcap_filter_hub_symlink(filter, &outBuf[0U], sizeof(outBuf) / sizeof(outBuf[0U]));
-    if (bytes_ret > 0)
+    if (bytes_ret > 0U)
     {
         PTSTR str;
 

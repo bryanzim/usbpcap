@@ -4,17 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "iocontrol.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "iocontrol.h"
 
 /*
  * Determines range and index for given address.
  *
  * Returns TRUE on success (address is within <0; 127>), FALSE otherwise.
  */
-static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* index)
+static BOOLEAN USBPcapGetAddressRangeAndIndex(const int address, UINT8* range, UINT8* index)
 {
     if ((address < 0) || (address > 127))
     {
@@ -27,7 +28,7 @@ static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* 
     return TRUE;
 }
 
-BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
+BOOLEAN USBPcapIsDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address)
 {
     BOOLEAN filtered = FALSE;
     UINT8 range;
@@ -53,7 +54,7 @@ BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
     return filtered;
 }
 
-BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
+BOOLEAN USBPcapSetDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address)
 {
     UINT8 range;
     UINT8 index;
@@ -72,7 +73,7 @@ BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
  *
  * Returns TRUE on success, FALSE otherwise (malformed list or invalid filter pointer).
  */
-BOOLEAN USBPcapInitAddressFilter(PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOOLEAN filterAll)
+BOOLEAN USBPcapInitAddressFilter(const PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOOLEAN filterAll)
 {
     USBPCAP_ADDRESS_FILTER tmp;
 
@@ -102,13 +103,13 @@ BOOLEAN USBPcapInitAddressFilter(PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOO
                 /* Move past number. */
                 do
                 {
-                    list++;
+                    ++list;
                 } while (isdigit(*list));
             }
             else if (*list == ',')
             {
                 /* Found valid separator, advance to next number. */
-                list++;
+                ++list;
             }
             else
             {

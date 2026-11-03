@@ -4,14 +4,15 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapBuffer.h"
+
 #include "USBPcapHelperFunctions.h"
+#include "USBPcapMain.h"
 
 #define USBPCAP_BUFFER_TAG (ULONG)'ffuB'
 
 __inline static UINT32
-USBPcapGetBufferFree(PUSBPCAP_ROOTHUB_DATA pData)
+USBPcapGetBufferFree(const PUSBPCAP_ROOTHUB_DATA pData)
 {
     if (pData->buffer == NULL)
     {
@@ -52,7 +53,7 @@ USBPcapGetBufferFree(PUSBPCAP_ROOTHUB_DATA pData)
 }
 
 __inline static UINT32
-USBPcapGetBufferAllocated(PUSBPCAP_ROOTHUB_DATA pData)
+USBPcapGetBufferAllocated(const PUSBPCAP_ROOTHUB_DATA pData)
 {
     if (pData->readOffset == pData->writeOffset)
     {
@@ -80,9 +81,9 @@ USBPcapGetBufferAllocated(PUSBPCAP_ROOTHUB_DATA pData)
 }
 
 __inline static void
-USBPcapBufferWriteUnsafe(PUSBPCAP_ROOTHUB_DATA pData,
-                         PVOID data,
-                         UINT32 length)
+USBPcapBufferWriteUnsafe(const PUSBPCAP_ROOTHUB_DATA pData,
+                         const PVOID data,
+                         const UINT32 length)
 {
     PCHAR buffer = (PCHAR)pData->buffer;
 
@@ -121,9 +122,9 @@ USBPcapBufferWriteUnsafe(PUSBPCAP_ROOTHUB_DATA pData,
  *
  * Caller must have acquired buffer spin lock.
  */
-static NTSTATUS USBPcapBufferWrite(PUSBPCAP_ROOTHUB_DATA pData,
-                                   PVOID data,
-                                   UINT32 length)
+static NTSTATUS USBPcapBufferWrite(const PUSBPCAP_ROOTHUB_DATA pData,
+                                   const PVOID data,
+                                   const UINT32 length)
 {
     if (length == 0U)
     {
@@ -146,9 +147,9 @@ static NTSTATUS USBPcapBufferWrite(PUSBPCAP_ROOTHUB_DATA pData,
  *
  * Retruns number of bytes read.
  */
-static UINT32 USBPcapBufferRead(PUSBPCAP_ROOTHUB_DATA pData,
-                                PVOID destBuffer,
-                                UINT32 destBufferSize)
+static UINT32 USBPcapBufferRead(const PUSBPCAP_ROOTHUB_DATA pData,
+                                const PVOID destBuffer,
+                                const UINT32 destBufferSize)
 {
     UINT32 available;
     UINT32 toRead;
@@ -158,7 +159,7 @@ static UINT32 USBPcapBufferRead(PUSBPCAP_ROOTHUB_DATA pData,
     available = USBPcapGetBufferAllocated(pData);
 
     /* No data to be read or empty destination buffer */
-    if (available == 0 || destBufferSize == 0)
+    if ((available == 0U) || (destBufferSize == 0U))
     {
         return 0;
     }
@@ -227,7 +228,7 @@ static UINT32 USBPcapBufferRead(PUSBPCAP_ROOTHUB_DATA pData,
  * Caller must have acquired buffer spin lock.
  */
 __inline static VOID
-USBPcapWriteGlobalHeader(PUSBPCAP_ROOTHUB_DATA pData)
+USBPcapWriteGlobalHeader(const PUSBPCAP_ROOTHUB_DATA pData)
 {
     pcap_hdr_t header;
 
@@ -245,14 +246,14 @@ USBPcapWriteGlobalHeader(PUSBPCAP_ROOTHUB_DATA pData)
 }
 
 NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
-                            UINT32 bytes)
+                            const UINT32 bytes)
 {
     NTSTATUS status;
     KIRQL irql;
     PVOID buffer;
 
     /* Minimum buffer size is 4 KiB, maximum 128 MiB */
-    if (bytes < 4096 || bytes > 134217728)
+    if ((bytes < 4096U) || (bytes > 134217728U))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -289,7 +290,7 @@ NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
         else
         {
             /* Copy (if any) unread data to new buffer */
-            if (allocated > 0)
+            if (allocated > 0U)
             {
                 USBPcapBufferRead(pData, buffer, bytes);
             }
@@ -308,12 +309,12 @@ NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
 }
 
 NTSTATUS USBPcapSetSnaplenSize(PUSBPCAP_ROOTHUB_DATA pData,
-                               UINT32 bytes)
+                               const UINT32 bytes)
 {
     NTSTATUS status;
     KIRQL irql;
 
-    if (bytes == 0)
+    if (bytes == 0U)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -337,7 +338,7 @@ NTSTATUS USBPcapSetSnaplenSize(PUSBPCAP_ROOTHUB_DATA pData,
  * If there is buffer allocated for given control device, frees all
  * memory allocated to it, otherwise does nothing.
  */
-VOID USBPcapBufferRemoveBuffer(PDEVICE_EXTENSION pDevExt)
+VOID USBPcapBufferRemoveBuffer(const PDEVICE_EXTENSION pDevExt)
 {
     PDEVICE_EXTENSION pRootExt;
     PUSBPCAP_ROOTHUB_DATA pData;
@@ -366,7 +367,7 @@ VOID USBPcapBufferRemoveBuffer(PDEVICE_EXTENSION pDevExt)
  * If there is buffer allocated for given control device, writes global
  * PCAP header to the buffer, otherwise does nothing.
  */
-VOID USBPcapBufferInitializeBuffer(PDEVICE_EXTENSION pDevExt)
+VOID USBPcapBufferInitializeBuffer(const PDEVICE_EXTENSION pDevExt)
 {
     PDEVICE_EXTENSION pRootExt;
     PUSBPCAP_ROOTHUB_DATA pData;
@@ -390,7 +391,7 @@ VOID USBPcapBufferInitializeBuffer(PDEVICE_EXTENSION pDevExt)
     KeReleaseSpinLock(&pData->bufferLock, irql);
 }
 
-NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
+NTSTATUS USBPcapBufferHandleReadIrp(const PIRP pIrp,
                                     PDEVICE_EXTENSION pDevExt,
                                     PUINT32 pBytesRead)
 {
@@ -450,7 +451,7 @@ NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
     bytesRead = USBPcapBufferRead(pRootData,
                                   buffer, bufferLength);
     *pBytesRead = bytesRead;
-    if (bytesRead == 0)
+    if (bytesRead == 0U)
     {
         IoCsqInsertIrp(&pDevExt->context.control.ioCsq,
                        pIrp, NULL);
@@ -465,7 +466,7 @@ NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
 /* called with pRootData->bufferLock held
  * releases pRootData->bufferLock before return
  */
-static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, KIRQL irql)
+static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, const KIRQL irql)
 {
     PDEVICE_EXTENSION pControlExt;
     PIRP pIrp = NULL;
@@ -497,20 +498,20 @@ static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, 
     if (buffer == NULL)
     {
         pIrp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        bytes = 0;
+        bytes = 0U;
     }
     else
     {
         bufferLength = MmGetMdlByteCount(pIrp->MdlAddress);
 
-        if (bufferLength != 0)
+        if (bufferLength != 0U)
         {
             bytes = USBPcapBufferRead(pRootData,
                                       buffer, bufferLength);
         }
         else
         {
-            bytes = 0;
+            bytes = 0U;
         }
 
         pIrp->IoStatus.Status = STATUS_SUCCESS;
@@ -525,10 +526,10 @@ static void USBPcapBufferCompletePendedReadIrp(PUSBPCAP_ROOTHUB_DATA pRootData, 
 }
 
 __inline static VOID
-USBPcapInitializePcapHeader(PUSBPCAP_ROOTHUB_DATA pData,
-                            LARGE_INTEGER timestamp,
-                            pcaprec_hdr_t* pcapHeader,
-                            UINT32 bytes)
+USBPcapInitializePcapHeader(const PUSBPCAP_ROOTHUB_DATA pData,
+                            const LARGE_INTEGER timestamp,
+                            pcaprec_hdr_t* const pcapHeader,
+                            const UINT32 bytes)
 {
     pcapHeader->ts_sec = (UINT32)(timestamp.QuadPart / 10000000 - 11644473600);
     pcapHeader->ts_usec = (UINT32)((timestamp.QuadPart % 10000000) / 10);
@@ -550,10 +551,10 @@ USBPcapInitializePcapHeader(PUSBPCAP_ROOTHUB_DATA pData,
  * payloadEntries is array of USBPCAP_PAYLOAD_ENTRY with the last element being {0, NULL}
  */
 static NTSTATUS
-USBPcapBufferStorePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
-                         LARGE_INTEGER timestamp,
-                         PUSBPCAP_BUFFER_PACKET_HEADER header,
-                         PUSBPCAP_PAYLOAD_ENTRY payloadEntries)
+USBPcapBufferStorePacket(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                         const LARGE_INTEGER timestamp,
+                         const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                         const PUSBPCAP_PAYLOAD_ENTRY payloadEntries)
 {
     UINT32 bytes;
     UINT32 bytesFree;
@@ -573,11 +574,11 @@ USBPcapBufferStorePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
     {
         UINT32 bytesMissing = bytes - (sizeof(pcaprec_hdr_t) + header->headerLen);
 
-        for (i = 0; (bytesMissing > 0) && (payloadEntries[i].buffer); i++)
+        for (i = 0; (bytesMissing > 0U) && (payloadEntries[i].buffer); ++i)
         {
             bytesMissing -= min(payloadEntries[i].size, bytesMissing);
         }
-        if (bytesMissing > 0)
+        if (bytesMissing > 0U)
         {
             DkDbgVal("Attempted to write invalid packet. Missing %d bytes of payload.",
                      bytesMissing);
@@ -602,7 +603,7 @@ USBPcapBufferStorePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
 
     /* Write USBPCAP_BUFFER_PACKET_HEADER */
     tmp = min(bytes, (UINT32)header->headerLen);
-    if (tmp > 0)
+    if (tmp > 0U)
     {
         USBPcapBufferWriteUnsafe(pRootData,
                                  (PVOID)header,
@@ -611,10 +612,10 @@ USBPcapBufferStorePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
     bytes -= tmp;
 
     /* Write payload entries */
-    for (i = 0; (bytes > 0) && (payloadEntries[i].buffer); i++)
+    for (i = 0; (bytes > 0U) && (payloadEntries[i].buffer); ++i)
     {
         tmp = min(bytes, payloadEntries[i].size);
-        if (tmp > 0)
+        if (tmp > 0U)
         {
             USBPcapBufferWriteUnsafe(pRootData,
                                      payloadEntries[i].buffer,
@@ -627,9 +628,9 @@ USBPcapBufferStorePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
 }
 
 NTSTATUS USBPcapBufferWriteTimestampedPayload(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                              LARGE_INTEGER timestamp,
-                                              PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                              PUSBPCAP_PAYLOAD_ENTRY payload)
+                                              const LARGE_INTEGER timestamp,
+                                              const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                              const PUSBPCAP_PAYLOAD_ENTRY payload)
 {
     KIRQL irql;
     NTSTATUS status;
@@ -648,17 +649,17 @@ NTSTATUS USBPcapBufferWriteTimestampedPayload(PUSBPCAP_ROOTHUB_DATA pRootData,
     return status;
 }
 
-NTSTATUS USBPcapBufferWritePayload(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                   PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                   PUSBPCAP_PAYLOAD_ENTRY payload)
+NTSTATUS USBPcapBufferWritePayload(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                   const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                   const PUSBPCAP_PAYLOAD_ENTRY payload)
 {
     LARGE_INTEGER timestamp = USBPcapGetCurrentTimestamp();
     return USBPcapBufferWriteTimestampedPayload(pRootData, timestamp, header, payload);
 }
 
-NTSTATUS USBPcapBufferWriteTimestampedPacket(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                             LARGE_INTEGER timestamp,
-                                             PUSBPCAP_BUFFER_PACKET_HEADER header,
+NTSTATUS USBPcapBufferWriteTimestampedPacket(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                             const LARGE_INTEGER timestamp,
+                                             const PUSBPCAP_BUFFER_PACKET_HEADER header,
                                              PVOID buffer)
 {
     USBPCAP_PAYLOAD_ENTRY payload[2U];
@@ -671,9 +672,9 @@ NTSTATUS USBPcapBufferWriteTimestampedPacket(PUSBPCAP_ROOTHUB_DATA pRootData,
     return USBPcapBufferWriteTimestampedPayload(pRootData, timestamp, header, payload);
 }
 
-NTSTATUS USBPcapBufferWritePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                  PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                  PVOID buffer)
+NTSTATUS USBPcapBufferWritePacket(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                  const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                  const PVOID buffer)
 {
     LARGE_INTEGER timestamp = USBPcapGetCurrentTimestamp();
     return USBPcapBufferWriteTimestampedPacket(pRootData, timestamp, header, buffer);

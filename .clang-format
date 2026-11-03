@@ -38,25 +38,36 @@ IndentWidth: 4
 MaxEmptyLinesToKeep: 10
 NamespaceIndentation: All
 PointerAlignment: Left
-# Windows and kernel headers are order-sensitive (initguid.h, ntddk.h).
-SortIncludes: Never
+# Lower priority is emitted first. initguid.h and winsock2.h stay ahead of
+# windows.h, and windows.h stays ahead of the other Windows headers, because
+# those headers are order-sensitive. Each group is still sorted.
+SortIncludes: CaseSensitive
 IncludeBlocks: Regroup
 IncludeCategories:
   # C and C++ standard headers. First match wins, so this stays ahead of the angle-bracket catch-all.
   - Regex: '^<(algorithm|any|array|atomic|barrier|bit|bitset|charconv|chrono|codecvt|compare|complex|concepts|condition_variable|coroutine|debugging|deque|exception|execution|expected|filesystem|flat_map|flat_set|format|forward_list|fstream|functional|future|generator|hazard_pointer|initializer_list|inplace_vector|iomanip|ios|iosfwd|iostream|istream|iterator|latch|limits|linalg|list|locale|map|mdspan|memory|memory_resource|mutex|new|numbers|numeric|optional|ostream|print|queue|random|ranges|ratio|rcu|regex|scoped_allocator|semaphore|set|shared_mutex|source_location|span|spanstream|sstream|stack|stacktrace|stdexcept|stdfloat|stop_token|streambuf|string|string_view|strstream|syncstream|system_error|text_encoding|thread|tuple|type_traits|typeindex|typeinfo|unordered_map|unordered_set|utility|valarray|variant|vector|version|assert\.h|complex\.h|ctype\.h|errno\.h|fenv\.h|float\.h|inttypes\.h|iso646\.h|limits\.h|locale\.h|math\.h|setjmp\.h|signal\.h|stdalign\.h|stdarg\.h|stdatomic\.h|stdbool\.h|stdckdint\.h|stddef\.h|stdint\.h|stdio\.h|stdlib\.h|stdnoreturn\.h|string\.h|tgmath\.h|threads\.h|time\.h|uchar\.h|wchar\.h|wctype\.h|cctype|cerrno|cfenv|cfloat|cinttypes|climits|clocale|cmath|csetjmp|csignal|cstdalign|cstdarg|cstdbool|cstddef|cstdint|cstdio|cstdlib|cstring|ctgmath|ctime|cuchar|cwchar|cwctype)>$'
-    Priority: 4
+    Priority: 6
     CaseSensitive: true
-  # OS headers.
-  - Regex: '^<([Ww]indows\.h|[Ww]in[Ss]ock2\.h|[Ww]in[Ss]ock\.h|ws2tcpip\.h|[Oo]bjbase\.h|[Ss]hlwapi\.h|[Ss]hlobj\.h|shellapi\.h|processthreadsapi\.h|synchapi\.h|fileapi\.h|handleapi\.h|errhandlingapi\.h|sysinfoapi\.h|timezoneapi\.h|wincrypt\.h|iphlpapi\.h|mstcpip\.h|mswsock\.h|mmsystem\.h|timeapi\.h|winioctl\.h|winbase\.h|winuser\.h|wingdi\.h|winnt\.h|winsvc\.h|tlhelp32\.h|psapi\.h|dbghelp\.h|direct\.h|fcntl\.h|io\.h|process\.h|pthread\.h|unistd\.h|netdb\.h|arpa/.+|linux/.+|net/.+|netinet/.+|sys/.+)>$'
+  - Regex: '^<[Ii]nitguid\.h>$'
+    Priority: 1
+    CaseSensitive: true
+  - Regex: '^<([Ww]in[Ss]ock2\.h|[Ww]in[Ss]ock\.h|ws2tcpip\.h)>$'
+    Priority: 2
+    CaseSensitive: true
+  - Regex: '^<[Ww]indows\.h>$'
     Priority: 3
+    CaseSensitive: true
+  # Other Windows and OS headers.
+  - Regex: '^<([Ss]hellapi\.h|[Ss]hlwapi\.h|[Ss]hlobj\.h|[Uu]sbioctl\.h|[Uu]sbiodef\.h|[Dd]evioctl\.h|[Ww]inioctl\.h|[Ss]etupapi\.h|[Cc]fgmgr32\.h|[Tt]char\.h|[Ww]types\.h|[Bb]asetsd\.h|[Ww]dmsec\.h|[Ff]cntl\.h|[Ii]o\.h|[Oo]bjbase\.h|processthreadsapi\.h|synchapi\.h|fileapi\.h|handleapi\.h|errhandlingapi\.h|sysinfoapi\.h|timezoneapi\.h|wincrypt\.h|iphlpapi\.h|mstcpip\.h|mswsock\.h|mmsystem\.h|timeapi\.h|winbase\.h|winuser\.h|wingdi\.h|winnt\.h|winsvc\.h|tlhelp32\.h|psapi\.h|dbghelp\.h|direct\.h|process\.h|pthread\.h|unistd\.h|netdb\.h|arpa/.+|linux/.+|net/.+|netinet/.+|sys/.+)>$'
+    Priority: 5
     CaseSensitive: true
   # External libraries.
   - Regex: '^<'
-    Priority: 2
+    Priority: 5
     CaseSensitive: true
   # Other project headers. The associated header is category 0 and stays first.
   - Regex: '^"'
-    Priority: 1
+    Priority: 4
     CaseSensitive: true
 SortUsingDeclarations: false
 SpaceAfterCStyleCast: false

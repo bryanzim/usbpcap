@@ -13,6 +13,6 @@ NTSTATUS USBPcapCreateRootHubControlDevice(IN PDEVICE_EXTENSION hubExt,
                                            OUT PDEVICE_OBJECT* control,
                                            OUT USHORT* busId);
 
-VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice);
+VOID USBPcapDeleteRootHubControlDevice(IN const PDEVICE_OBJECT controlDevice);
 
 #endif /* USBPCAP_ROOTHUB_CONTROL_H */

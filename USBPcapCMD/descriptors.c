@@ -4,15 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <Windows.h>
-#include <devioctl.h>
-#include <Usbioctl.h>
+
+#include "USBPcap.h"
 #include "enum.h"
 #include "iocontrol.h"
-#include "USBPcap.h"
+
+#include <Usbioctl.h>
+#include <devioctl.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define URB_SELECT_CONFIGURATION 0x0000
 #define URB_CONTROL_TRANSFER 0x0008
@@ -42,7 +45,7 @@ typedef struct _descriptor_callback_context
  * Returns dynamically allocated USB_DESCRIPTOR_REQUEST structure that must be freed
  * using free(). On failure, returns NULL.
  */
-static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(HANDLE hub, ULONG port, UCHAR index)
+static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(const HANDLE hub, const ULONG port, const UCHAR index)
 {
     ULONG nBytes = 0U;
     ULONG nBytesReturned = 0U;
@@ -129,13 +132,13 @@ static PUSB_DESCRIPTOR_REQUEST get_config_descriptor(HANDLE hub, ULONG port, UCH
     return request;
 }
 
-static void initialize_control_header(PUSBPCAP_BUFFER_CONTROL_HEADER hdr,
-                                      USHORT bus, USHORT deviceAddress,
+static void initialize_control_header(const PUSBPCAP_BUFFER_CONTROL_HEADER hdr,
+                                      USHORT bus, const USHORT deviceAddress,
                                       UINT32 dataLength,
                                       UCHAR stage,
                                       USHORT function,
-                                      BOOL fromPDO,
-                                      BOOL out)
+                                      const BOOL fromPDO,
+                                      const BOOL out)
 {
     hdr->header.headerLen = sizeof(USBPCAP_BUFFER_CONTROL_HEADER);
     hdr->header.irpId = 0;
@@ -150,7 +153,7 @@ static void initialize_control_header(PUSBPCAP_BUFFER_CONTROL_HEADER hdr,
     hdr->stage = stage;
 }
 
-static void add_to_list(descriptor_callback_context* ctx, void* data, int length)
+static void add_to_list(descriptor_callback_context* const ctx, void* data, int length)
 {
     list_entry* new_tail = (list_entry*)malloc(sizeof(list_entry));
     new_tail->data = data;
@@ -167,7 +170,7 @@ static void add_to_list(descriptor_callback_context* ctx, void* data, int length
     }
 }
 
-static void free_list(list_entry* head)
+static void free_list(list_entry* const head)
 {
     list_entry* e;
 
@@ -186,15 +189,15 @@ static void free_list(list_entry* head)
     }
 }
 
-static void write_setup_packet(descriptor_callback_context* ctx,
-                               USHORT function,
-                               USHORT deviceAddress,
-                               UINT8 bmRequestType,
-                               UINT8 bRequest,
-                               UINT16 wValue,
-                               UINT16 wIndex,
-                               UINT16 wLength,
-                               BOOL out)
+static void write_setup_packet(descriptor_callback_context* const ctx,
+                               const USHORT function,
+                               const USHORT deviceAddress,
+                               const UINT8 bmRequestType,
+                               const UINT8 bRequest,
+                               const UINT16 wValue,
+                               const UINT16 wIndex,
+                               const UINT16 wLength,
+                               const BOOL out)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + 8;
     UINT8* data = (UINT8*)malloc(data_len);
@@ -216,12 +219,12 @@ static void write_setup_packet(descriptor_callback_context* ctx,
     add_to_list(ctx, data, data_len);
 }
 
-static void write_complete_packet(descriptor_callback_context* ctx,
-                                  USHORT function,
-                                  USHORT deviceAddress,
-                                  void* payload,
-                                  int payload_length,
-                                  BOOL out)
+static void write_complete_packet(descriptor_callback_context* const ctx,
+                                  const USHORT function,
+                                  const USHORT deviceAddress,
+                                  void* const payload,
+                                  const int payload_length,
+                                  const BOOL out)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + payload_length;
     UINT8* data = (UINT8*)malloc(data_len);
@@ -238,9 +241,9 @@ static void write_complete_packet(descriptor_callback_context* ctx,
 }
 
 static void
-write_device_descriptor_complete(descriptor_callback_context* ctx,
-                                 USHORT deviceAddress,
-                                 PUSB_DEVICE_DESCRIPTOR descriptor)
+write_device_descriptor_complete(descriptor_callback_context* const ctx,
+                                 const USHORT deviceAddress,
+                                 const PUSB_DEVICE_DESCRIPTOR descriptor)
 {
     int data_len = sizeof(USBPCAP_BUFFER_CONTROL_HEADER) + 18;
     UINT8* data = (UINT8*)malloc(data_len);
@@ -274,8 +277,8 @@ write_device_descriptor_complete(descriptor_callback_context* ctx,
 }
 
 static void
-descriptor_callback(HANDLE hub, ULONG port, USHORT deviceAddress,
-                    PUSB_DEVICE_DESCRIPTOR desc, void* context)
+descriptor_callback(const HANDLE hub, const ULONG port, const USHORT deviceAddress,
+                    const PUSB_DEVICE_DESCRIPTOR desc, void* const context)
 {
     descriptor_callback_context* ctx = (descriptor_callback_context*)context;
     PUSB_DESCRIPTOR_REQUEST request;
@@ -317,7 +320,7 @@ descriptor_callback(HANDLE hub, ULONG port, USHORT deviceAddress,
     free(request);
 }
 
-void* generate_pcap_packets(list_entry* head, int* out_len)
+void* generate_pcap_packets(list_entry* const head, int* out_len)
 {
     int total_length = 0;
     list_entry* e;
@@ -374,7 +377,7 @@ void* descriptors_generate_pcap(const char* filter, int* pcap_length, PUSBPCAP_A
         }
         else
         {
-            tmp++;
+            ++tmp;
             break;
         }
     }
@@ -390,7 +393,7 @@ void* descriptors_generate_pcap(const char* filter, int* pcap_length, PUSBPCAP_A
     return pcap_packets;
 }
 
-void descriptors_free_pcap(void* pcap)
+void descriptors_free_pcap(void* const pcap)
 {
     free(pcap);
 }

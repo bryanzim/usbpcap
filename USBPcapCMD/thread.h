@@ -8,6 +8,7 @@
 #define USBPCAP_CMD_THREAD_H
 
 #include <windows.h>
+
 #include "USBPcap.h"
 
 struct inject_descriptors
@@ -45,6 +46,6 @@ struct thread_data
 };
 
 HANDLE create_filter_read_handle(struct thread_data* data);
-DWORD WINAPI read_thread(LPVOID param);
+DWORD WINAPI read_thread(const LPVOID param);
 
 #endif /* USBPCAP_CMD_THREAD_H */

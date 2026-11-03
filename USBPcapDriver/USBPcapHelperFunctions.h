@@ -9,29 +9,29 @@
 
 #include "USBPcapMain.h"
 
-NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
+NTSTATUS USBPcapGetTargetDevicePdo(IN const PDEVICE_OBJECT DeviceObject,
                                    OUT PDEVICE_OBJECT* pdo);
 
 NTSTATUS USBPcapGetNumberOfPorts(PDEVICE_OBJECT parent,
                                  PULONG numberOfPorts);
 
 #if DBG
-NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub);
+NTSTATUS USBPcapPrintUSBPChildrenInformation(const PDEVICE_OBJECT hub);
 #else
 #define USBPcapPrintUSBPChildrenInformation(hub) \
     {                                            \
     }
 #endif
 
-NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt);
+NTSTATUS USBPcapGetDeviceUSBInfo(const PDEVICE_EXTENSION pDevExt);
 
-BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device);
+BOOLEAN USBPcapIsDeviceRootHub(const PDEVICE_OBJECT device);
 
-PWSTR USBPcapGetHubInterfaces(PDEVICE_OBJECT hub);
+PWSTR USBPcapGetHubInterfaces(const PDEVICE_OBJECT hub);
 
 
-BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address);
-BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address);
+BOOLEAN USBPcapIsDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address);
+BOOLEAN USBPcapSetDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address);
 
 LARGE_INTEGER USBPcapGetCurrentTimestamp(VOID);
 

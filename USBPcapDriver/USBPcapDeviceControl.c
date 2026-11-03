@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
-#include "include\USBPcap.h"
-#include "USBPcapURB.h"
-#include "USBPcapRootHubControl.h"
 #include "USBPcapBuffer.h"
 #include "USBPcapHelperFunctions.h"
+#include "USBPcapMain.h"
+#include "USBPcapRootHubControl.h"
+#include "USBPcapURB.h"
+#include "include\USBPcap.h"
 
 static NTSTATUS
-HandleUSBPcapControlIOCTL(PIRP pIrp, PIO_STACK_LOCATION pStack,
-                          PDEVICE_EXTENSION rootExt, PUSBPCAP_ROOTHUB_DATA pRootData,
-                          BOOLEAN allowCapture,
+HandleUSBPcapControlIOCTL(const PIRP pIrp, const PIO_STACK_LOCATION pStack,
+                          const PDEVICE_EXTENSION rootExt, PUSBPCAP_ROOTHUB_DATA pRootData,
+                          const BOOLEAN allowCapture,
                           SIZE_T* outLength)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
@@ -135,7 +135,7 @@ HandleUSBPcapControlIOCTL(PIRP pIrp, PIO_STACK_LOCATION pStack,
 ///////////////////////////////////////////////////////////////////////
 // I/O device control request handlers
 //
-NTSTATUS DkDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkDevCtl(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -154,8 +154,8 @@ NTSTATUS DkDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 
     pStack = IoGetCurrentIrpStackLocation(pIrp);
 
-    if (pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB ||
-        pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE)
+    if ((pDevExt->deviceMagic == USBPCAP_MAGIC_ROOTHUB) ||
+        (pDevExt->deviceMagic == USBPCAP_MAGIC_DEVICE))
     {
         IoSkipCurrentIrpStackLocation(pIrp);
         ntStat = IoCallDriver(pDevExt->pNextDevObj, pIrp);
@@ -195,7 +195,7 @@ NTSTATUS DkDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 ////////////////////////////////////////////////////////////////////////////
 // Internal I/O device control request handlers
 //
-NTSTATUS DkInDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+NTSTATUS DkInDevCtl(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PDEVICE_EXTENSION pDevExt = NULL;
@@ -253,7 +253,7 @@ NTSTATUS DkInDevCtl(PDEVICE_OBJECT pDevObj, PIRP pIrp)
 }
 
 
-NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp)
+NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp)
 {
     NTSTATUS ntStat = STATUS_SUCCESS;
     PURB pUrb = NULL;
@@ -305,7 +305,7 @@ NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIR
     return ntStat;
 }
 
-NTSTATUS DkTgtInDevCtlCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx)
+NTSTATUS DkTgtInDevCtlCompletion(const PDEVICE_OBJECT pDevObj, const PIRP pIrp, const PVOID pCtx)
 {
     NTSTATUS status;
     PDEVICE_EXTENSION pDevExt = NULL;
