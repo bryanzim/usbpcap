@@ -16,13 +16,13 @@ typedef struct
 } USBPCAP_PAYLOAD_ENTRY, *PUSBPCAP_PAYLOAD_ENTRY;
 
 NTSTATUS USBPcapSetUpBuffer(PUSBPCAP_ROOTHUB_DATA pData,
-                            UINT32 bytes);
+                            const UINT32 bytes);
 NTSTATUS USBPcapSetSnaplenSize(PUSBPCAP_ROOTHUB_DATA pData,
-                               UINT32 bytes);
+                               const UINT32 bytes);
 
-VOID USBPcapBufferRemoveBuffer(PDEVICE_EXTENSION pDevExt);
-VOID USBPcapBufferInitializeBuffer(PDEVICE_EXTENSION pDevExt);
-NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
+VOID USBPcapBufferRemoveBuffer(const PDEVICE_EXTENSION pDevExt);
+VOID USBPcapBufferInitializeBuffer(const PDEVICE_EXTENSION pDevExt);
+NTSTATUS USBPcapBufferHandleReadIrp(const PIRP pIrp,
                                     PDEVICE_EXTENSION pDevExt,
                                     PUINT32 pBytesRead);
 
@@ -30,22 +30,22 @@ NTSTATUS USBPcapBufferHandleReadIrp(PIRP pIrp,
  * array of payload entries instead of single buffer pointer.
  */
 NTSTATUS USBPcapBufferWriteTimestampedPayload(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                              LARGE_INTEGER timestamp,
-                                              PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                              PUSBPCAP_PAYLOAD_ENTRY payload);
+                                              const LARGE_INTEGER timestamp,
+                                              const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                              const PUSBPCAP_PAYLOAD_ENTRY payload);
 /* Same as USBPcapBufferWritePacket but take {0, NULL} terminated
  * array of payload entries instead of single buffer pointer.
  */
-NTSTATUS USBPcapBufferWritePayload(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                   PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                   PUSBPCAP_PAYLOAD_ENTRY payload);
+NTSTATUS USBPcapBufferWritePayload(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                   const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                   const PUSBPCAP_PAYLOAD_ENTRY payload);
 
-NTSTATUS USBPcapBufferWriteTimestampedPacket(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                             LARGE_INTEGER timestamp,
-                                             PUSBPCAP_BUFFER_PACKET_HEADER header,
+NTSTATUS USBPcapBufferWriteTimestampedPacket(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                             const LARGE_INTEGER timestamp,
+                                             const PUSBPCAP_BUFFER_PACKET_HEADER header,
                                              PVOID buffer);
-NTSTATUS USBPcapBufferWritePacket(PUSBPCAP_ROOTHUB_DATA pRootData,
-                                  PUSBPCAP_BUFFER_PACKET_HEADER header,
-                                  PVOID buffer);
+NTSTATUS USBPcapBufferWritePacket(const PUSBPCAP_ROOTHUB_DATA pRootData,
+                                  const PUSBPCAP_BUFFER_PACKET_HEADER header,
+                                  const PVOID buffer);
 
 #endif /* USBPCAP_BUFFER_H */

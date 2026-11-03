@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapQueue.h"
 
-VOID DkCsqInsertIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
+#include "USBPcapMain.h"
+
+VOID DkCsqInsertIrp(__in const PIO_CSQ pCsq, __in PIRP pIrp)
 {
     PDEVICE_EXTENSION pDevExt = NULL;
 
@@ -20,7 +21,7 @@ VOID DkCsqInsertIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
                    &pIrp->Tail.Overlay.ListEntry);
 }
 
-VOID DkCsqRemoveIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
+VOID DkCsqRemoveIrp(__in const PIO_CSQ pCsq, __in PIRP pIrp)
 {
     BOOLEAN bRes = FALSE;
 
@@ -29,7 +30,7 @@ VOID DkCsqRemoveIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
     bRes = RemoveEntryList(&pIrp->Tail.Overlay.ListEntry);
 }
 
-PIRP DkCsqPeekNextIrp(__in PIO_CSQ pCsq, __in PIRP pIrp, __in PVOID pCtx)
+PIRP DkCsqPeekNextIrp(__in const PIO_CSQ pCsq, __in const PIRP pIrp, __in const PVOID pCtx)
 {
     PDEVICE_EXTENSION pDevExt = NULL;
     PIRP pNextIrp = NULL;
@@ -76,7 +77,7 @@ PIRP DkCsqPeekNextIrp(__in PIO_CSQ pCsq, __in PIRP pIrp, __in PVOID pCtx)
 
 __drv_raisesIRQL(DISPATCH_LEVEL)
     __drv_maxIRQL(DISPATCH_LEVEL)
-        VOID DkCsqAcquireLock(__in PIO_CSQ pCsq, __out __drv_out_deref(__drv_savesIRQL) PKIRQL pKIrql)
+        VOID DkCsqAcquireLock(__in const PIO_CSQ pCsq, __out __drv_out_deref(__drv_savesIRQL) const PKIRQL pKIrql)
 {
     PDEVICE_EXTENSION pDevExt = NULL;
 
@@ -89,7 +90,7 @@ __drv_raisesIRQL(DISPATCH_LEVEL)
 }
 
 __drv_requiresIRQL(DISPATCH_LEVEL)
-    VOID DkCsqReleaseLock(__in PIO_CSQ pCsq, __in __drv_in(__drv_restoresIRQL) KIRQL kIrql)
+    VOID DkCsqReleaseLock(__in const PIO_CSQ pCsq, __in __drv_in(__drv_restoresIRQL) const KIRQL kIrql)
 {
     PDEVICE_EXTENSION pDevExt = NULL;
 
@@ -101,7 +102,7 @@ __drv_requiresIRQL(DISPATCH_LEVEL)
     KeReleaseSpinLock(&pDevExt->context.control.csqSpinLock, kIrql);
 }
 
-VOID DkCsqCompleteCanceledIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
+VOID DkCsqCompleteCanceledIrp(__in const PIO_CSQ pCsq, __in const PIRP pIrp)
 {
     PDEVICE_EXTENSION pDevExt = NULL;
 
@@ -115,7 +116,7 @@ VOID DkCsqCompleteCanceledIrp(__in PIO_CSQ pCsq, __in PIRP pIrp)
     IoReleaseRemoveLock(&pDevExt->removeLock, pIrp);
 }
 
-VOID DkCsqCleanUpQueue(PDEVICE_OBJECT pDevObj, PIRP pIrp)
+VOID DkCsqCleanUpQueue(const PDEVICE_OBJECT pDevObj, const PIRP pIrp)
 {
     PIO_STACK_LOCATION pStack = NULL;
     PDEVICE_EXTENSION pDevExt = NULL;

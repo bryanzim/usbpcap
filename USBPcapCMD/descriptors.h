@@ -10,6 +10,6 @@
 #include "iocontrol.h"
 
 void* descriptors_generate_pcap(const char* filter, int* pcap_length, PUSBPCAP_ADDRESS_FILTER addresses);
-void descriptors_free_pcap(void* pcap);
+void descriptors_free_pcap(void* const pcap);
 
 #endif /* USBPCAP_DESCRIPTORS_H */

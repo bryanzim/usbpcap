@@ -7,6 +7,8 @@
 #ifndef USBPCAP_CMD_FILTERS_H
 #define USBPCAP_CMD_FILTERS_H
 
+#include <windows.h>
+
 struct filters
 {
     char* device; /* \\.\USBPcapX */

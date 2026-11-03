@@ -5,20 +5,21 @@
  */
 
 #define INITGUID
-#include "USBPcapMain.h"
 #include "USBPcapHelperFunctions.h"
 
-static NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
+#include "USBPcapMain.h"
+
+static NTSTATUS USBPcapGetPDODriverKey(const PDEVICE_OBJECT pdo_device,
                                        PWCHAR* plocation);
 static NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
-                                        ULONG port,
+                                        const ULONG port,
                                         PUSB_NODE_CONNECTION_DRIVERKEY_NAME* ppname);
-static NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
-                                           PDEVICE_OBJECT pdo_device,
+static NTSTATUS USBPcapGetTargetDevicePort(const PDEVICE_OBJECT parent,
+                                           const PDEVICE_OBJECT pdo_device,
                                            PULONG port);
 static NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
-                                          ULONG port,
-                                          USB_NODE_CONNECTION_INFORMATION* info);
+                                          const ULONG port,
+                                          USB_NODE_CONNECTION_INFORMATION* const info);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, USBPcapGetPDODriverKey)
@@ -34,7 +35,7 @@ static NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
  * needed.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-    NTSTATUS USBPcapGetTargetDevicePdo(IN PDEVICE_OBJECT DeviceObject,
+    NTSTATUS USBPcapGetTargetDevicePdo(IN const PDEVICE_OBJECT DeviceObject,
                                        OUT PDEVICE_OBJECT* pdo)
 {
     KEVENT event;
@@ -106,8 +107,8 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
 static
-NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
-                                    PULONG port)
+NTSTATUS USBPcapGetTargetDevicePort(const PDEVICE_OBJECT pdo_device,
+                                    const PULONG port)
 {
     NTSTATUS status;
     UNICODE_STRING str;
@@ -174,7 +175,7 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
     /*
      * Remove the text before first # (Port_#)
      */
-    for (idx = 0; location[idx] != L'#' && idx < length; ++idx)
+    for (idx = 0U; (location[idx] != L'#') && (idx < length); ++idx)
     {
         location[idx] = L' ';
     }
@@ -195,7 +196,7 @@ NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT pdo_device,
  *
  * On Success, the plocation buffer must be freed using ExFreePool.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetPDODriverKey(PDEVICE_OBJECT pdo_device,
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetPDODriverKey(const PDEVICE_OBJECT pdo_device,
                                                                          PWCHAR* plocation)
 {
     NTSTATUS status;
@@ -273,7 +274,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetPDODriverKey(PDEVICE
  * On Success, the *ppname must be freed using ExFreePool.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetDriverKeyName(PDEVICE_OBJECT parent,
-                                                                          ULONG port,
+                                                                          const ULONG port,
                                                                           PUSB_NODE_CONNECTION_DRIVERKEY_NAME* ppname)
 {
     USB_NODE_CONNECTION_DRIVERKEY_NAME name;
@@ -404,8 +405,8 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetDriverKeyName(PDEVIC
 }
 
 
-__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetTargetDevicePort(PDEVICE_OBJECT parent,
-                                                                             PDEVICE_OBJECT pdo_device,
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetTargetDevicePort(const PDEVICE_OBJECT parent,
+                                                                             const PDEVICE_OBJECT pdo_device,
                                                                              PULONG port)
 {
     NTSTATUS status;
@@ -439,7 +440,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetTargetDevicePort(PDE
 
     found = FALSE;
 
-    for (idx = 1; idx <= maxIndex; idx++)
+    for (idx = 1U; idx <= maxIndex; ++idx)
     {
         pname = NULL;
         status = USBPcapGetDriverKeyName(parent, idx, &pname);
@@ -487,9 +488,9 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetTargetDevicePort(PDE
  * NodeType is UsbHub, and composite-parent information only when
  * NodeType is UsbMIParent. Ask for one type.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapQueryNodeInformation(PDEVICE_OBJECT parent,
-                                                                              USB_HUB_NODE nodeType,
-                                                                              USB_NODE_INFORMATION* info)
+__drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapQueryNodeInformation(const PDEVICE_OBJECT parent,
+                                                                              const USB_HUB_NODE nodeType,
+                                                                              USB_NODE_INFORMATION* const info)
 {
     KEVENT event;
     PIRP irp;
@@ -583,8 +584,8 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
 }
 
 __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetNodeInformation(PDEVICE_OBJECT hub,
-                                                                            ULONG port,
-                                                                            USB_NODE_CONNECTION_INFORMATION* info)
+                                                                            const ULONG port,
+                                                                            USB_NODE_CONNECTION_INFORMATION* const info)
 {
     KEVENT event;
     PIRP irp;
@@ -648,7 +649,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static NTSTATUS USBPcapGetNodeInformation(PDEV
 
 #if DBG
 __drv_requiresIRQL(PASSIVE_LEVEL)
-    NTSTATUS USBPcapPrintUSBPChildrenInformation(PDEVICE_OBJECT hub)
+    NTSTATUS USBPcapPrintUSBPChildrenInformation(const PDEVICE_OBJECT hub)
 {
     USB_NODE_CONNECTION_INFORMATION info;
     NTSTATUS status;
@@ -666,7 +667,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
     }
     DkDbgVal("Got maximum index", maxIndex);
 
-    for (idx = 1; idx <= maxIndex; idx++)
+    for (idx = 1U; idx <= maxIndex; ++idx)
     {
         USBPcapGetNodeInformation(hub, idx, &info);
     }
@@ -680,7 +681,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
  * parentPort, isHub, deviceAddress.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-    NTSTATUS USBPcapGetDeviceUSBInfo(PDEVICE_EXTENSION pDevExt)
+    NTSTATUS USBPcapGetDeviceUSBInfo(const PDEVICE_EXTENSION pDevExt)
 {
     USB_NODE_CONNECTION_INFORMATION info;
     NTSTATUS status;
@@ -752,9 +753,9 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
 
 static RTL_QUERY_REGISTRY_ROUTINE QueryCompareHwid;
 
-static NTSTATUS QueryCompareHwid(PWSTR ValueName, ULONG ValueType,
-                                 PVOID ValueData, ULONG ValueLength,
-                                 PVOID Context, PVOID EntryContext)
+static NTSTATUS QueryCompareHwid(const PWSTR ValueName, const ULONG ValueType,
+                                 const PVOID ValueData, const ULONG ValueLength,
+                                 const PVOID Context, const PVOID EntryContext)
 {
     PBOOLEAN match;
     PWSTR hwid;
@@ -800,7 +801,7 @@ static NTSTATUS QueryCompareHwid(PWSTR ValueName, ULONG ValueType,
  *
  * Returns TRUE if hwid is in the list, FALSE otherwise.
  */
-__drv_requiresIRQL(PASSIVE_LEVEL) static BOOLEAN IsHwidNonStandardRootHub(PWSTR hwid)
+__drv_requiresIRQL(PASSIVE_LEVEL) static BOOLEAN IsHwidNonStandardRootHub(const PWSTR hwid)
 {
     RTL_QUERY_REGISTRY_TABLE table[2U];
     NTSTATUS status;
@@ -841,7 +842,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL) static BOOLEAN IsHwidNonStandardRootHub(PWSTR 
  * Returns TRUE if device is root hub, FALSE otherwise.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-    BOOLEAN USBPcapIsDeviceRootHub(PDEVICE_OBJECT device)
+    BOOLEAN USBPcapIsDeviceRootHub(const PDEVICE_OBJECT device)
 {
     NTSTATUS status;
     PDEVICE_OBJECT pdo;
@@ -892,8 +893,8 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
     }
 
     id = 0;
-    start = 0;
-    for (i = 0; i < (length / sizeof(WCHAR)); i++)
+    start = 0U;
+    for (i = 0U; i < (length / sizeof(WCHAR)); ++i)
     {
         if (hwid[i] == L'\0')
         {
@@ -905,15 +906,15 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
             else
             {
                 hardwareIds[id] = &hwid[start];
-                id++;
+                ++id;
                 start = i + 1;
             }
         }
     }
 
-    while (id > 0)
+    while (id > 0U)
     {
-        id--;
+        --id;
 #if DBG
         {
             UNICODE_STRING str;
@@ -961,7 +962,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
  * On failure returns NULL.
  */
 __drv_requiresIRQL(PASSIVE_LEVEL)
-    PWSTR USBPcapGetHubInterfaces(PDEVICE_OBJECT hub)
+    PWSTR USBPcapGetHubInterfaces(const PDEVICE_OBJECT hub)
 {
     NTSTATUS status;
     PDEVICE_OBJECT pdo;
@@ -999,7 +1000,7 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
  *
  * Returns TRUE on success (address is within <0; 127>), FALSE otherwise.
  */
-static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* index)
+static BOOLEAN USBPcapGetAddressRangeAndIndex(const int address, UINT8* range, UINT8* index)
 {
     if ((address < 0) || (address > 127))
     {
@@ -1012,7 +1013,7 @@ static BOOLEAN USBPcapGetAddressRangeAndIndex(int address, UINT8* range, UINT8* 
     return TRUE;
 }
 
-BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
+BOOLEAN USBPcapIsDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address)
 {
     BOOLEAN filtered = FALSE;
     UINT8 range;
@@ -1040,7 +1041,7 @@ BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
     return filtered;
 }
 
-BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address)
+BOOLEAN USBPcapSetDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address)
 {
     UINT8 range;
     UINT8 index;

@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
-#include <Wdmsec.h>
 #include "USBPcapRootHubControl.h"
+
 #include "Ntstrsafe.h"
+#include "USBPcapMain.h"
+
+#include <Wdmsec.h>
 
 extern volatile LONG g_controlId;
 
@@ -150,7 +152,7 @@ End:
 }
 
 
-VOID USBPcapDeleteRootHubControlDevice(IN PDEVICE_OBJECT controlDevice)
+VOID USBPcapDeleteRootHubControlDevice(IN const PDEVICE_OBJECT controlDevice)
 {
     UNICODE_STRING symbolicLinkName;
     WCHAR symbolicNameBuffer[MAX_SYMBOLIC_LEN / sizeof(WCHAR)];

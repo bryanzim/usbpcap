@@ -4,33 +4,34 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapURB.h"
-#include "USBPcapTables.h"
+
 #include "USBPcapBuffer.h"
 #include "USBPcapHelperFunctions.h"
+#include "USBPcapMain.h"
+#include "USBPcapTables.h"
 
 #include <stddef.h> /* Required for offsetof macro */
 
 #if DBG
-VOID USBPcapPrintChars(PCHAR text, PUCHAR buffer, ULONG length)
+VOID USBPcapPrintChars(const PCHAR text, const PUCHAR buffer, const ULONG length)
 {
     ULONG i;
 
     KdPrint(("%s HEX: ", text));
-    for (i = 0; i < length; ++i)
+    for (i = 0U; i < length; ++i)
     {
         KdPrint(("%02X ", buffer[i]));
     }
 
     KdPrint(("\n%s TEXT: ", text));
-    for (i = 0; i < length; ++i)
+    for (i = 0U; i < length; ++i)
     {
         /*
          * For printable characters, print the character,
          * otherwise print dot
          */
-        if (buffer[i] >= 0x20 && buffer[i] <= 0x7E)
+        if ((buffer[i] >= 0x20) && (buffer[i] <= 0x7E))
         {
             KdPrint(("%c", buffer[i]));
         }
@@ -48,12 +49,12 @@ VOID USBPcapPrintChars(PCHAR text, PUCHAR buffer, ULONG length)
     }
 #endif
 
-static PVOID USBPcapURBGetBufferPointer(ULONG length,
-                                        PVOID buffer,
-                                        PMDL bufferMDL)
+static PVOID USBPcapURBGetBufferPointer(const ULONG length,
+                                        const PVOID buffer,
+                                        const PMDL bufferMDL)
 {
     ASSERT((length == 0U) ||
-           ((length != 0U) && (buffer != NULL || bufferMDL != NULL)));
+           ((length != 0U) && ((buffer != NULL) || (bufferMDL != NULL))));
 
     if (length == 0U)
     {
@@ -88,8 +89,8 @@ USBPcapParseInterfaceInformation(PUSBPCAP_DEVICE_DATA pDeviceData,
      * Iterate over all interfaces in search for pipe handles
      * Add endpoint information to endpoint table
      */
-    i = 0;
-    while (interfaces_len != 0 && pInterface->Length != 0)
+    i = 0U;
+    while ((interfaces_len != 0U) && (pInterface->Length != 0))
     {
         PUSBD_PIPE_INFORMATION Pipe = pInterface->Pipes;
 
@@ -141,7 +142,7 @@ USBPcapParseInterfaceInformation(PUSBPCAP_DEVICE_DATA pDeviceData,
                  pInterface->SubClass, pInterface->Protocol,
                  pInterface->NumberOfPipes));
 
-        for (j = 0; j < pInterface->NumberOfPipes; ++j, Pipe++)
+        for (j = 0; j < pInterface->NumberOfPipes; ++j, ++Pipe)
         {
             KdPrint(("Pipe %d MaxPacketSize: %d"
                      "EndpointAddress: %d PipeType: %d"
@@ -162,7 +163,7 @@ USBPcapParseInterfaceInformation(PUSBPCAP_DEVICE_DATA pDeviceData,
         }
 
         /* Advance to next interface */
-        i++;
+        ++i;
         interfaces_len -= pInterface->Length;
         pInterface = (PUSBD_INTERFACE_INFORMATION)((PUCHAR)pInterface + pInterface->Length);
     }
@@ -170,10 +171,10 @@ USBPcapParseInterfaceInformation(PUSBPCAP_DEVICE_DATA pDeviceData,
 
 __inline static VOID
 USBPcapAnalyzeControlTransfer(struct _URB_CONTROL_TRANSFER* transfer,
-                              struct _URB_HEADER* header,
-                              PUSBPCAP_DEVICE_DATA pDeviceData,
-                              PIRP pIrp,
-                              BOOLEAN post)
+                              struct _URB_HEADER* const header,
+                              const PUSBPCAP_DEVICE_DATA pDeviceData,
+                              const PIRP pIrp,
+                              const BOOLEAN post)
 {
     BOOLEAN transferFromDevice;
     USBPCAP_BUFFER_CONTROL_HEADER packetHeader;
@@ -242,7 +243,7 @@ USBPcapAnalyzeControlTransfer(struct _URB_CONTROL_TRANSFER* transfer,
     else
     {
         dataBuffer = NULL;
-        dataBufferLength = 0;
+        dataBufferLength = 0U;
     }
 
     /* Add Setup stage to log only when on its way from FDO to PDO. */
@@ -304,7 +305,7 @@ USBPcapAnalyzeControlTransfer(struct _URB_CONTROL_TRANSFER* transfer,
  * post is FALSE when the request is being on its way to the bus driver
  * post is TRUE when the request returns from the bus driver
  */
-VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
+VOID USBPcapAnalyzeURB(const PIRP pIrp, const PURB pUrb, const BOOLEAN post,
                        PUSBPCAP_DEVICE_DATA pDeviceData)
 {
     struct _URB_HEADER* header;
@@ -372,7 +373,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
         {
             PUSB_CONFIGURATION_DESCRIPTOR source;
             PUSB_CONFIGURATION_DESCRIPTOR copy = NULL;
-            SIZE_T descSize = 0;
+            SIZE_T descSize = 0U;
 
             source = pSelectConfiguration->ConfigurationDescriptor;
 
@@ -382,20 +383,20 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
              */
             __try
             {
-                if (source->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR) &&
-                    source->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE &&
-                    source->wTotalLength >= source->bLength)
+                if ((source->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR)) &&
+                    ((source->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE)) &&
+                    (source->wTotalLength >= source->bLength))
                 {
                     descSize = source->wTotalLength;
                 }
             }
             __except (EXCEPTION_EXECUTE_HANDLER)
             {
-                descSize = 0;
+                descSize = 0U;
                 DkDbgStr("Configuration descriptor header faulted");
             }
 
-            if (descSize != 0)
+            if (descSize != 0U)
             {
                 copy = USBPcapAllocateNonPaged(descSize, (ULONG)'CSED');
             }
@@ -405,10 +406,10 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                 __try
                 {
                     RtlCopyMemory(copy, source, descSize);
-                    if (copy->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR) &&
-                        copy->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE &&
-                        copy->wTotalLength >= copy->bLength &&
-                        copy->wTotalLength <= descSize)
+                    if ((copy->bLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR)) &&
+                        ((copy->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE)) &&
+                        ((copy->wTotalLength >= copy->bLength)) &&
+                        (copy->wTotalLength <= descSize))
                     {
                         pDeviceData->descriptor = copy;
                         copy = NULL;
@@ -1027,8 +1028,8 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
         /* Handle transfers of 1..1024 packets. Zero underflows the
          * header size because the header already contains one slot.
          */
-        if (transfer->NumberOfPackets == 0 ||
-            transfer->NumberOfPackets > 1024)
+        if ((transfer->NumberOfPackets == 0) ||
+            (transfer->NumberOfPackets > 1024))
         {
             DkDbgVal("Unsupported isochronous packet count",
                      transfer->NumberOfPackets);
@@ -1045,7 +1046,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
             captureBytes = sizeof(USBPCAP_BUFFER_ISOCH_HEADER) +
                            ((SIZE_T)(transfer->NumberOfPackets - 1) *
                             sizeof(USBPCAP_BUFFER_ISO_PACKET));
-            if (urbBytes > header->Length || captureBytes > MAXUSHORT)
+            if ((urbBytes > header->Length) || (captureBytes > MAXUSHORT))
             {
                 DkDbgStr("Isochronous URB length does not cover NumberOfPackets");
                 break;
@@ -1096,7 +1097,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
         captureBuffer = NULL;
 
         /* Copy the packet headers untouched */
-        for (i = 0; i < transfer->NumberOfPackets; i++)
+        for (i = 0U; i < transfer->NumberOfPackets; ++i)
         {
             packetHeader->packet[i].offset = transfer->IsoPacket[i].Offset;
             packetHeader->packet[i].length = transfer->IsoPacket[i].Length;
@@ -1120,13 +1121,13 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                 ULONG compactedLength;
                 BOOLEAN packetsFit;
 
-                compactedLength = 0;
+                compactedLength = 0U;
                 packetsFit = (transferBuffer != NULL);
 
                 /* Each packet must lie inside the transfer buffer, and
                  * the lengths must sum without wrapping.
                  */
-                for (i = 0; packetsFit && (i < transfer->NumberOfPackets); i++)
+                for (i = 0U; packetsFit && (i < transfer->NumberOfPackets); ++i)
                 {
                     ULONG packetOffset = transfer->IsoPacket[i].Offset;
                     ULONG packetLength = transfer->IsoPacket[i].Length;
@@ -1135,7 +1136,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                     {
                         packetsFit = FALSE;
                     }
-                    else if ((packetLength != 0) &&
+                    else if ((packetLength != 0U) &&
                              ((packetOffset > transfer->TransferBufferLength) ||
                               (packetLength > (transfer->TransferBufferLength - packetOffset))))
                     {
@@ -1173,7 +1174,7 @@ VOID USBPcapAnalyzeURB(PIRP pIrp, PURB pUrb, BOOLEAN post,
                  * that there won't be gaps in the resulting packet.
                  */
                 compactedOffset = 0;
-                for (i = 0; i < transfer->NumberOfPackets; i++)
+                for (i = 0U; i < transfer->NumberOfPackets; ++i)
                 {
                     /* Adjust the offsets */
                     packetHeader->packet[i].offset = compactedOffset;

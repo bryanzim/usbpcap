@@ -182,13 +182,13 @@ __drv_dispatchType_other DRIVER_DISPATCH DkDefault;
 // Completion routine for internal device control request for target object
 //
 IO_COMPLETION_ROUTINE DkTgtInDevCtlCompletion;
-NTSTATUS DkTgtInDevCtlCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx);
+NTSTATUS DkTgtInDevCtlCompletion(const PDEVICE_OBJECT pDevObj, const PIRP pIrp, const PVOID pCtx);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // General purpose I/O request completion routine
 //
-VOID DkCompleteRequest(PIRP pIrp, NTSTATUS resStat, UINT_PTR uiInfo);
+VOID DkCompleteRequest(const PIRP pIrp, const NTSTATUS resStat, const UINT_PTR uiInfo);
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -202,51 +202,51 @@ VOID DkCompleteRequest(PIRP pIrp, NTSTATUS resStat, UINT_PTR uiInfo);
 // General purpose routine to forward to next or lower driver and then
 // wait forever until lower driver finished it's job
 //
-NTSTATUS DkForwardAndWait(PDEVICE_OBJECT pNextDevObj, PIRP pIrp);
+NTSTATUS DkForwardAndWait(const PDEVICE_OBJECT pNextDevObj, const PIRP pIrp);
 
 
 ///////////////////////////////////////////////////////////
 // Completion routine for general purpose
 //
 IO_COMPLETION_ROUTINE DkGenCompletion;
-NTSTATUS DkGenCompletion(PDEVICE_OBJECT pDevObj, PIRP pIrp, PVOID pCtx);
+NTSTATUS DkGenCompletion(const PDEVICE_OBJECT pDevObj, const PIRP pIrp, const PVOID pCtx);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // "Sub dispatch routines" for Hub filter object
 //
-NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp);
-NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp);
+NTSTATUS DkHubFltPnP(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp);
+NTSTATUS DkHubFltPnpHandleQryDevRels(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // "Sub dispatch routines" for target device
 //
-NTSTATUS DkTgtPnP(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp);
-NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, PIO_STACK_LOCATION pStack, PIRP pIrp);
+NTSTATUS DkTgtPnP(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp);
+NTSTATUS DkTgtInDevCtl(PDEVICE_EXTENSION pDevExt, const PIO_STACK_LOCATION pStack, const PIRP pIrp);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Detach and delete hub filter objects routine
 //
-VOID DkDetachAndDeleteHubFilt(PDEVICE_EXTENSION pDevExt);
+VOID DkDetachAndDeleteHubFilt(const PDEVICE_EXTENSION pDevExt);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Create and attach target device filter routine
 //
-NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pDevExt, PDEVICE_OBJECT pTgtDevObj);
+NTSTATUS DkCreateAndAttachTgt(PDEVICE_EXTENSION pDevExt, const PDEVICE_OBJECT pTgtDevObj);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Detach and delete target device fitler routine
 //
-VOID DkDetachAndDeleteTgt(PDEVICE_EXTENSION pDevExt);
+VOID DkDetachAndDeleteTgt(const PDEVICE_EXTENSION pDevExt);
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get USB Hub device name
 //
-NTSTATUS DkGetHubDevName(PIO_STACK_LOCATION pStack, PIRP pIrp, PULONG pUlRes);
+NTSTATUS DkGetHubDevName(const PIO_STACK_LOCATION pStack, const PIRP pIrp, PULONG pUlRes);
 
 #endif /* USBPCAP_MAIN_H */

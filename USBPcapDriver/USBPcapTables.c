@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#include "USBPcapMain.h"
 #include "USBPcapTables.h"
+
+#include "USBPcapMain.h"
 
 #define USBPCAP_TABLE_TAG ' BAT'
 
@@ -16,7 +17,7 @@ typedef struct _USBPCAP_INTERNAL_ENDPOINT_INFO
     USBPCAP_ENDPOINT_INFO info;
 } USBPCAP_INTERNAL_ENDPOINT_INFO, *PUSBPCAP_INTERNAL_ENDPOINT_INFO;
 
-VOID USBPcapRemoveEndpointInfo(IN PRTL_GENERIC_TABLE table,
+VOID USBPcapRemoveEndpointInfo(IN const PRTL_GENERIC_TABLE table,
                                IN USBD_PIPE_HANDLE handle)
 {
     USBPCAP_INTERNAL_ENDPOINT_INFO info;
@@ -36,8 +37,8 @@ VOID USBPcapRemoveEndpointInfo(IN PRTL_GENERIC_TABLE table,
     }
 }
 
-VOID USBPcapAddEndpointInfo(IN PRTL_GENERIC_TABLE table,
-                            IN PUSBD_PIPE_INFORMATION pipeInfo,
+VOID USBPcapAddEndpointInfo(IN const PRTL_GENERIC_TABLE table,
+                            IN const PUSBD_PIPE_INFORMATION pipeInfo,
                             IN USHORT deviceAddress)
 {
     USBPCAP_INTERNAL_ENDPOINT_INFO info;
@@ -68,7 +69,7 @@ VOID USBPcapAddEndpointInfo(IN PRTL_GENERIC_TABLE table,
  *
  * Returns NULL when no such endpoint information was found
  */
-PUSBPCAP_ENDPOINT_INFO USBPcapGetEndpointInfo(IN PRTL_GENERIC_TABLE table,
+PUSBPCAP_ENDPOINT_INFO USBPcapGetEndpointInfo(IN const PRTL_GENERIC_TABLE table,
                                               IN USBD_PIPE_HANDLE handle)
 {
     PUSBPCAP_INTERNAL_ENDPOINT_INFO pInfo;
@@ -88,16 +89,16 @@ PUSBPCAP_ENDPOINT_INFO USBPcapGetEndpointInfo(IN PRTL_GENERIC_TABLE table,
 
 RTL_GENERIC_FREE_ROUTINE USBPcapFreeRoutine;
 static VOID
-USBPcapFreeRoutine(IN PRTL_GENERIC_TABLE table,
-                   IN PVOID buffer)
+USBPcapFreeRoutine(IN const PRTL_GENERIC_TABLE table,
+                   IN const PVOID buffer)
 {
     ExFreePool(buffer);
 }
 
 RTL_GENERIC_ALLOCATE_ROUTINE USBPcapAllocateRoutine;
 static PVOID
-USBPcapAllocateRoutine(IN PRTL_GENERIC_TABLE table,
-                       IN CLONG size)
+USBPcapAllocateRoutine(IN const PRTL_GENERIC_TABLE table,
+                       IN const CLONG size)
 {
     return USBPcapAllocateNonPaged(
         size,
@@ -106,9 +107,9 @@ USBPcapAllocateRoutine(IN PRTL_GENERIC_TABLE table,
 
 RTL_GENERIC_COMPARE_ROUTINE USBPcapCompareEndpointInfo;
 static RTL_GENERIC_COMPARE_RESULTS
-USBPcapCompareEndpointInfo(IN PRTL_GENERIC_TABLE table,
-                           IN PVOID first,
-                           IN PVOID second)
+USBPcapCompareEndpointInfo(IN const PRTL_GENERIC_TABLE table,
+                           IN const PVOID first,
+                           IN const PVOID second)
 {
     PUSBPCAP_INTERNAL_ENDPOINT_INFO left = first;
     PUSBPCAP_INTERNAL_ENDPOINT_INFO right = second;
@@ -127,7 +128,7 @@ USBPcapCompareEndpointInfo(IN PRTL_GENERIC_TABLE table,
     }
 }
 
-VOID USBPcapFreeEndpointTable(IN PRTL_GENERIC_TABLE table)
+VOID USBPcapFreeEndpointTable(IN const PRTL_GENERIC_TABLE table)
 {
     PVOID element;
 
@@ -149,7 +150,7 @@ VOID USBPcapFreeEndpointTable(IN PRTL_GENERIC_TABLE table)
  *
  * Returned table must be freed using USBPcapFreeEndpointTable()
  */
-PRTL_GENERIC_TABLE USBPcapInitializeEndpointTable(IN PVOID context)
+PRTL_GENERIC_TABLE USBPcapInitializeEndpointTable(IN const PVOID context)
 {
     PRTL_GENERIC_TABLE table;
 
@@ -176,8 +177,8 @@ PRTL_GENERIC_TABLE USBPcapInitializeEndpointTable(IN PVOID context)
 }
 
 BOOLEAN USBPcapRetrieveEndpointInfo(IN PUSBPCAP_DEVICE_DATA pDeviceData,
-                                    IN USBD_PIPE_HANDLE handle,
-                                    PUSBPCAP_ENDPOINT_INFO pInfo)
+                                    IN const USBD_PIPE_HANDLE handle,
+                                    const PUSBPCAP_ENDPOINT_INFO pInfo)
 {
     KIRQL irql;
     PUSBPCAP_ENDPOINT_INFO info;
@@ -215,7 +216,7 @@ typedef struct _USBPCAP_INTERNAL_URB_IRP_INFO
     USBPCAP_URB_IRP_INFO info;
 } USBPCAP_INTERNAL_URB_IRP_INFO, *PUSBPCAP_INTERNAL_URB_IRP_INFO;
 
-VOID USBPcapRemoveURBIRPInfo(IN PRTL_GENERIC_TABLE table,
+VOID USBPcapRemoveURBIRPInfo(IN const PRTL_GENERIC_TABLE table,
                              IN PIRP irp)
 {
     USBPCAP_INTERNAL_URB_IRP_INFO info;
@@ -231,8 +232,8 @@ VOID USBPcapRemoveURBIRPInfo(IN PRTL_GENERIC_TABLE table,
     }
 }
 
-VOID USBPcapAddURBIRPInfo(IN PRTL_GENERIC_TABLE table,
-                          IN PUSBPCAP_URB_IRP_INFO irpinfo)
+VOID USBPcapAddURBIRPInfo(IN const PRTL_GENERIC_TABLE table,
+                          IN const PUSBPCAP_URB_IRP_INFO irpinfo)
 {
     USBPCAP_INTERNAL_URB_IRP_INFO info;
     BOOLEAN new;
@@ -251,7 +252,7 @@ VOID USBPcapAddURBIRPInfo(IN PRTL_GENERIC_TABLE table,
 }
 
 static PUSBPCAP_URB_IRP_INFO
-USBPcapGetURBIRPInfo(IN PRTL_GENERIC_TABLE table,
+USBPcapGetURBIRPInfo(IN const PRTL_GENERIC_TABLE table,
                      IN PIRP irp)
 {
     PUSBPCAP_INTERNAL_URB_IRP_INFO pInfo;
@@ -269,7 +270,7 @@ USBPcapGetURBIRPInfo(IN PRTL_GENERIC_TABLE table,
     return &pInfo->info;
 }
 
-VOID USBPcapFreeURBIRPInfoTable(IN PRTL_GENERIC_TABLE table)
+VOID USBPcapFreeURBIRPInfoTable(IN const PRTL_GENERIC_TABLE table)
 {
     PVOID element;
 
@@ -287,9 +288,9 @@ VOID USBPcapFreeURBIRPInfoTable(IN PRTL_GENERIC_TABLE table)
 
 RTL_GENERIC_COMPARE_ROUTINE USBPcapCompareURBIRPInfo;
 static RTL_GENERIC_COMPARE_RESULTS
-USBPcapCompareURBIRPInfo(IN PRTL_GENERIC_TABLE table,
-                         IN PVOID first,
-                         IN PVOID second)
+USBPcapCompareURBIRPInfo(IN const PRTL_GENERIC_TABLE table,
+                         IN const PVOID first,
+                         IN const PVOID second)
 {
     PUSBPCAP_INTERNAL_URB_IRP_INFO left = first;
     PUSBPCAP_INTERNAL_URB_IRP_INFO right = second;
@@ -308,7 +309,7 @@ USBPcapCompareURBIRPInfo(IN PRTL_GENERIC_TABLE table,
     }
 }
 
-PRTL_GENERIC_TABLE USBPcapInitializeURBIRPInfoTable(IN PVOID context)
+PRTL_GENERIC_TABLE USBPcapInitializeURBIRPInfoTable(IN const PVOID context)
 {
     PRTL_GENERIC_TABLE table;
 
@@ -341,8 +342,8 @@ PRTL_GENERIC_TABLE USBPcapInitializeURBIRPInfoTable(IN PVOID context)
  * Returns TRUE if irp was found in table, FALSE otherwise.
  */
 BOOLEAN USBPcapObtainURBIRPInfo(IN PUSBPCAP_DEVICE_DATA pDeviceData,
-                                IN PIRP irp,
-                                PUSBPCAP_URB_IRP_INFO pInfo)
+                                IN const PIRP irp,
+                                const PUSBPCAP_URB_IRP_INFO pInfo)
 {
     KIRQL irql;
     PUSBPCAP_URB_IRP_INFO info;

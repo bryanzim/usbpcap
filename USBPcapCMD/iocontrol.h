@@ -7,12 +7,15 @@
 #ifndef USBPCAP_CMD_IOCONTROL_H
 #define USBPCAP_CMD_IOCONTROL_H
 
-#include <basetsd.h>
-#include <wtypes.h>
+#include <windows.h>
+
 #include "USBPcap.h"
 
-BOOLEAN USBPcapIsDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address);
-BOOLEAN USBPcapSetDeviceFiltered(PUSBPCAP_ADDRESS_FILTER filter, int address);
-BOOLEAN USBPcapInitAddressFilter(PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOOLEAN filterAll);
+#include <basetsd.h>
+#include <wtypes.h>
+
+BOOLEAN USBPcapIsDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address);
+BOOLEAN USBPcapSetDeviceFiltered(const PUSBPCAP_ADDRESS_FILTER filter, const int address);
+BOOLEAN USBPcapInitAddressFilter(const PUSBPCAP_ADDRESS_FILTER filter, PCHAR list, BOOLEAN filterAll);
 
 #endif /* USBPCAP_CMD_IOCONTROL_H */
